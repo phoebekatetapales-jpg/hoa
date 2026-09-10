@@ -293,6 +293,19 @@ td{padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
 tr:last-child td{border-bottom:0}
 .tablewrap{overflow-x:auto}
 @media(max-width:640px){.hide-sm{display:none}}
+@media(max-width:640px){
+  table.stack-mobile thead{display:none}
+  table.stack-mobile, table.stack-mobile tbody, table.stack-mobile tr, table.stack-mobile td{display:block;width:100%}
+  table.stack-mobile{border:0}
+  table.stack-mobile tr{border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px}
+  table.stack-mobile tr:last-child{margin-bottom:0}
+  table.stack-mobile td{padding:7px 0;border-bottom:1px dashed var(--line)}
+  table.stack-mobile td:last-child{border-bottom:0;padding-top:11px}
+  table.stack-mobile td.hide-sm{display:block}
+  table.stack-mobile td[data-label]::before{content:attr(data-label);display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+  table.stack-mobile td[style*="text-align:right"]{text-align:left}
+  table.stack-mobile .btn-row{justify-content:flex-start}
+}
 .progress{height:7px;background:var(--paper);border-radius:20px;overflow:hidden;border:1px solid var(--line)}
 .progress i{display:block;height:100%;background:var(--emerald);transition:width .5s cubic-bezier(.2,.7,.3,1)}
 .progress.slate i{background:var(--slate)}
@@ -1169,11 +1182,11 @@ const ADMIN = {
     const owners = store.accounts.filter(a=>a.role==='homeowner'||a.role==='renter');
     const admins = store.accounts.filter(a=>a.role==='admin'||a.role==='security'||a.role==='board');
     const card = a =>
-      '<tr><td><strong>'+esc(a.name)+'</strong><div class="meta">'+esc(a.email)+'</div></td>' +
-      '<td><span class="tag t-grey">'+esc(ROLE_LABEL(a.role))+'</span><div class="meta mono">'+esc(a.unit)+'</div></td>' +
-      '<td class="hide-sm">'+esc(a.phone||'—')+'</td>' +
-      '<td class="hide-sm meta">'+(a.lastSeen?ago(a.lastSeen):'Never signed in')+'</td>' +
-      '<td><span class="tag '+(a.status==='Active'?'t-emerald':a.status==='Invited'?'t-amber':'t-rose')+'">'+esc(a.status)+'</span></td>' +
+      '<tr><td data-label="Name"><strong>'+esc(a.name)+'</strong><div class="meta">'+esc(a.email)+'</div></td>' +
+      '<td data-label="Role"><span class="tag t-grey">'+esc(ROLE_LABEL(a.role))+'</span><div class="meta mono">'+esc(a.unit)+'</div></td>' +
+      '<td class="hide-sm" data-label="Mobile">'+esc(a.phone||'—')+'</td>' +
+      '<td class="hide-sm meta" data-label="Last seen">'+(a.lastSeen?ago(a.lastSeen):'Never signed in')+'</td>' +
+      '<td data-label="Status"><span class="tag '+(a.status==='Active'?'t-emerald':a.status==='Invited'?'t-amber':'t-rose')+'">'+esc(a.status)+'</span></td>' +
       '<td style="text-align:right"><div class="btn-row" style="justify-content:flex-end">' +
         '<button class="btn btn-ghost btn-sm" onclick="userForm(\''+a.id+'\')">Edit</button>' +
         (a.status==='Invited' ? '<button class="btn btn-ghost btn-sm" onclick="resendInvite(\''+a.id+'\')">Resend invite</button>' : '') +
@@ -1198,14 +1211,14 @@ const ADMIN = {
           stat('Suspended', owners.filter(a=>a.status==='Suspended').length, 'Access blocked') +
         '</div>' +
         sectionCard('Resident accounts',
-          '<div class="tablewrap"><table><thead><tr><th>Name</th><th>Role</th><th class="hide-sm">Mobile</th>' +
+          '<div class="tablewrap"><table class="stack-mobile"><thead><tr><th>Name</th><th>Role</th><th class="hide-sm">Mobile</th>' +
           '<th class="hide-sm">Last seen</th><th>Status</th><th></th></tr></thead><tbody>' +
           owners.map(card).join('') + '</tbody></table></div>',
           '<button class="btn btn-primary btn-sm" style="width:auto" onclick="userForm()">Add resident</button>');
       },
       admins(){
         return sectionCard('Staff, security and Board accounts',
-          '<div class="tablewrap"><table><thead><tr><th>Name</th><th>Role</th><th class="hide-sm">Mobile</th>' +
+          '<div class="tablewrap"><table class="stack-mobile"><thead><tr><th>Name</th><th>Role</th><th class="hide-sm">Mobile</th>' +
           '<th class="hide-sm">Last seen</th><th>Status</th><th></th></tr></thead><tbody>' +
           admins.map(card).join('') + '</tbody></table></div>',
           '<button class="btn btn-ghost btn-sm" onclick="userForm(null,\'admin\')">Add administrator</button>') +
