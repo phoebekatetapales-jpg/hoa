@@ -973,6 +973,7 @@ const NAV = {
           store.concerns.filter(c=>c.status!=='Closed').length + store.complaints.filter(c=>c.status!=='Resolved').length +
           store.requests.filter(r=>r.status!=='Resolved').length + store.tickets.filter(t=>t.status!=='Resolved').length },
       { id:'homeowners', label:'Homeowners',              icon:'users', badge:()=>store.accounts.filter(a=>a.status==='Invited').length },
+      { id:'profiles',   label:'Homeowner Profiles',      icon:'users' },
       { id:'property',   label:'Property',                icon:'building' },
       { id:'operations', label:'Operations & Maintenance',icon:'wrench', badge:()=>store.requests.filter(r=>r.status!=='Resolved').length },
       { id:'calendar',   label:'Calendar',                icon:'calendar' },
@@ -1254,6 +1255,34 @@ const ADMIN = {
         {id:'invites',label:'Invitations',n:store.accounts.filter(a=>a.status==='Invited').length},
         {id:'admins',label:'Staff & Board',n:admins.length},
         {id:'roles',label:'Access matrix'}],'accounts') + inner;
+  },
+
+  /* ---------- HOMEOWNER PROFILES ---------- */
+  profiles(){
+    const residents = store.accounts.filter(a=>a.role==='homeowner'||a.role==='renter');
+    return head('Homeowner Profiles','Every resident’s record in one place — dues history, requests, complaints and bookings.') +
+    '<div class="grid g-3">' +
+      residents.map(a => {
+        const u = store.units.find(x=>x.unit===a.unit);
+        const dues = store.dues.filter(d=>d.unit===a.unit);
+        const openItems = store.requests.filter(r=>r.unit===a.unit && r.status!=='Resolved').length +
+          store.complaints.filter(c=>c.unit===a.unit && c.status!=='Resolved').length;
+        const dueTag = !dues.length ? {t:'No dues yet',c:'t-grey'}
+          : dues.some(d=>d.status==='Overdue') ? {t:'Overdue',c:'t-rose'}
+          : dues.some(d=>d.status==='Unpaid') ? {t:'Unpaid',c:'t-amber'} : {t:'Current',c:'t-emerald'};
+        return '<div class="card card-pad">' +
+          '<div class="row" style="align-items:center;margin-bottom:10px">' +
+            '<div class="avatar">'+esc(initials(a.name))+'</div>' +
+            '<div class="grow"><div class="ttl">'+esc(a.name)+'</div><div class="meta mono">'+esc(a.unit)+' · '+esc(ROLE_LABEL(a.role))+'</div></div>' +
+          '</div>' +
+          '<div class="kv"><span>Phase</span><b>'+esc(u?u.phase:'—')+'</b></div>' +
+          '<div class="kv"><span>Monthly dues</span><b>'+(u?peso(unitDues(u)):'—')+'</b></div>' +
+          '<div class="kv"><span>Dues status</span><span class="tag '+dueTag.c+'">'+dueTag.t+'</span></div>' +
+          '<div class="kv"><span>Open items</span><b>'+openItems+'</b></div>' +
+          '<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px" onclick="homeownerProfile(\''+a.unit+'\')">View full profile</button>' +
+        '</div>';
+      }).join('') +
+    '</div>';
   },
 
   /* ---------- PROPERTY & FINANCIALS ---------- */
