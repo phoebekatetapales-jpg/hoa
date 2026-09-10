@@ -1143,6 +1143,16 @@ const phaseCollections = () => {
   });
 };
 
+let profileFilter = '';
+function onProfileSearch(v){
+  profileFilter = v;
+  const active = document.activeElement;
+  const pos = active && active.id==='profileSearchInput' ? active.selectionStart : null;
+  render();
+  const el = $('#profileSearchInput');
+  if(el){ el.focus(); if(pos!=null) el.setSelectionRange(pos,pos); }
+}
+
 /* ============================================================
    ADMIN VIEWS
 ============================================================ */
@@ -1259,9 +1269,15 @@ const ADMIN = {
 
   /* ---------- HOMEOWNER PROFILES ---------- */
   profiles(){
-    const residents = store.accounts.filter(a=>a.role==='homeowner'||a.role==='renter');
+    const term = profileFilter.trim().toLowerCase();
+    const all = store.accounts.filter(a=>a.role==='homeowner'||a.role==='renter');
+    const residents = all.filter(a => !term ||
+      a.name.toLowerCase().includes(term) || a.unit.toLowerCase().includes(term) || a.email.toLowerCase().includes(term));
     return head('Homeowner Profiles','Every resident’s record in one place — dues history, requests, complaints and bookings.') +
-    '<div class="grid g-3">' +
+    '<div class="fld" style="max-width:360px">' +
+      '<input class="input" id="profileSearchInput" type="text" placeholder="Search by name, unit or email…" value="'+esc(profileFilter)+'" oninput="onProfileSearch(this.value)">' +
+    '</div>' +
+    (residents.length ? '<div class="grid g-3">' +
       residents.map(a => {
         const u = store.units.find(x=>x.unit===a.unit);
         const dues = store.dues.filter(d=>d.unit===a.unit);
@@ -1282,7 +1298,7 @@ const ADMIN = {
           '<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px" onclick="homeownerProfile(\''+a.unit+'\')">View full profile</button>' +
         '</div>';
       }).join('') +
-    '</div>';
+    '</div>' : '<div class="card">'+empty('No residents match “'+esc(profileFilter)+'”','Try a different name, unit, or email.')+'</div>');
   },
 
   /* ---------- PROPERTY & FINANCIALS ---------- */
