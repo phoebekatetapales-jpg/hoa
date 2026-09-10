@@ -1158,7 +1158,7 @@ const ADMIN = {
         '<div class="meta"><span class="mono">'+esc(r.unit)+'</span>·<span>'+esc(r.by)+'</span>·<span>'+ago(r.at)+'</span></div></div>' +
         '<span class="tag '+statusTag(r.status)+'">'+esc(r.status)+'</span></div></li>').join('') + '</ul>',
         '<button class="btn btn-ghost btn-sm" onclick="go(\'operations\')">Open all</button>') +
-      sectionCard('Live election tally', tallyBlock(true),
+      sectionCard('Live election tally', '<div class="card-pad">'+tallyBlock(true)+'</div>',
         '<button class="btn btn-ghost btn-sm" onclick="go(\'governance\');goTab(\'gov\',\'election\')">Manage</button>') +
     '</div>';
   },
