@@ -1131,6 +1131,16 @@ const collected = () => augDues().filter(d=>d.status==='Paid').reduce((a,b)=>a+b
 const collectionPct = () => Math.round(augDues().filter(d=>d.status==='Paid').length / augDues().length * 100);
 const totalExpense = () => store.expenses.filter(x=>x.status==='Paid').reduce((a,b)=>a+b.amount,0);
 const hasVoted = () => Object.keys(store.election.myBallot).length === store.election.positions.length;
+const phaseCollections = () => {
+  const phases = [...new Set(store.units.map(u=>u.phase))].sort();
+  return phases.map(ph => {
+    const units = store.units.filter(u=>u.phase===ph).map(u=>u.unit);
+    const dues = store.dues.filter(d=>units.includes(d.unit));
+    const billed = dues.reduce((a,b)=>a+b.amount,0);
+    const collected = dues.filter(d=>d.status==='Paid').reduce((a,b)=>a+b.amount,0);
+    return { phase:ph, units:units.length, billed, collected, pct: billed ? Math.round(collected/billed*100) : 0 };
+  });
+};
 
 /* ============================================================
    ADMIN VIEWS
@@ -1182,7 +1192,7 @@ const ADMIN = {
     const owners = store.accounts.filter(a=>a.role==='homeowner'||a.role==='renter');
     const admins = store.accounts.filter(a=>a.role==='admin'||a.role==='security'||a.role==='board');
     const card = a =>
-      '<tr><td data-label="Name"><strong>'+esc(a.name)+'</strong><div class="meta">'+esc(a.email)+'</div></td>' +
+      '<tr><td data-label="Name"><button class="btn-ghost" style="border:0;background:none;padding:0;cursor:pointer;text-align:left;font:inherit;color:var(--slate)" onclick="homeownerProfile(\''+a.unit+'\')"><strong>'+esc(a.name)+'</strong></button><div class="meta">'+esc(a.email)+'</div></td>' +
       '<td data-label="Role"><span class="tag t-grey">'+esc(ROLE_LABEL(a.role))+'</span><div class="meta mono">'+esc(a.unit)+'</div></td>' +
       '<td class="hide-sm" data-label="Mobile">'+esc(a.phone||'—')+'</td>' +
       '<td class="hide-sm meta" data-label="Last seen">'+(a.lastSeen?ago(a.lastSeen):'Never signed in')+'</td>' +
@@ -1506,9 +1516,15 @@ const ADMIN = {
           : empty('No billing run yet','Generate the next billing to bill every household for the period.'));
       },
       collections(){
-        return sectionCard('Dues ledger',
+        return sectionCard('Collections by phase',
+          '<div class="tablewrap"><table><thead><tr><th>Phase</th><th class="hide-sm">Units</th><th>Collected</th><th class="hide-sm">Billed</th><th>Rate</th></tr></thead><tbody>' +
+          phaseCollections().map(p => '<tr><td><strong>'+esc(p.phase)+'</strong></td><td class="hide-sm mono">'+p.units+'</td>' +
+            '<td class="mono">'+peso(p.collected)+'</td><td class="hide-sm mono">'+peso(p.billed)+'</td>' +
+            '<td><div class="row" style="align-items:center;gap:8px"><div class="progress" style="width:70px"><i style="width:'+p.pct+'%"></i></div><span class="mono" style="font-size:12.5px">'+p.pct+'%</span></div></td></tr>').join('') +
+          '</tbody></table></div>') +
+        sectionCard('Dues ledger',
           '<div class="tablewrap"><table><thead><tr><th>Household</th><th class="hide-sm">Period</th><th>Amount</th><th class="hide-sm">Method</th><th>Status</th><th></th></tr></thead><tbody>' +
-          store.dues.map(d => '<tr><td><strong>'+esc(d.owner)+'</strong><div class="meta mono">'+esc(d.unit)+'</div></td>' +
+          store.dues.map(d => '<tr><td><button class="btn-ghost" style="border:0;background:none;padding:0;cursor:pointer;text-align:left;font:inherit;color:var(--slate)" onclick="homeownerProfile(\''+d.unit+'\')"><strong>'+esc(d.owner)+'</strong></button><div class="meta mono">'+esc(d.unit)+'</div></td>' +
             '<td class="hide-sm">'+esc(d.period)+'</td><td class="mono">'+peso(d.amount)+'</td>' +
             '<td class="hide-sm">'+esc(d.method||'—')+'</td><td><span class="tag '+statusTag(d.status)+'">'+esc(d.status)+'</span></td>' +
             '<td style="text-align:right">'+(d.status==='Paid'
@@ -2822,6 +2838,34 @@ function resetPassword(id){
       a.password = 'temp'+Math.floor(1000+Math.random()*8999);
       commit('Password reset for '+a.name+'. Temporary password: '+a.password,{title:'Password reset'});
       return true; });
+}
+function homeownerProfile(unit){
+  const acc = store.accounts.find(a=>a.unit===unit && (a.role==='homeowner'||a.role==='renter'));
+  const u = store.units.find(x=>x.unit===unit);
+  const myDues = store.dues.filter(d=>d.unit===unit);
+  const myReq = store.requests.filter(r=>r.unit===unit);
+  const myCmp = store.complaints.filter(c=>c.unit===unit);
+  const myBk = store.bookings.filter(b=>b.unit===unit);
+  const billed = myDues.reduce((a,b)=>a+b.amount,0);
+  const collected = myDues.filter(d=>d.status==='Paid').reduce((a,b)=>a+b.amount,0);
+  const section = (label, items, render) => '<div class="eyebrow" style="margin:16px 0 8px">'+esc(label)+' ('+items.length+')</div>' +
+    (items.length ? '<ul class="list">'+items.map(render).join('')+'</ul>' : '<p class="meta">Nothing on file.</p>');
+  modal('Homeowner profile — '+(acc?esc(acc.name):esc(unit)), 'Unit '+unit+(u?' · '+u.phase+' · '+u.lot+' sqm lot':''),
+    '<div class="card card-pad" style="background:var(--paper)">' +
+      '<div class="kv"><span>Owner of record</span><b>'+esc(acc?acc.name:(u?u.owner:'—'))+'</b></div>' +
+      '<div class="kv"><span>Email</span><b>'+esc(acc?acc.email:'—')+'</b></div>' +
+      '<div class="kv"><span>Mobile</span><b>'+esc(acc&&acc.phone?acc.phone:'—')+'</b></div>' +
+      '<div class="kv"><span>Occupancy</span><b>'+esc(u?u.occupancy:'—')+'</b></div>' +
+      '<div class="kv"><span>Monthly dues</span><b>'+(u?peso(unitDues(u)):'—')+'</b></div>' +
+      '<div class="kv"><span>Lifetime dues</span><b>'+peso(collected)+' collected of '+peso(billed)+' billed</b></div>' +
+    '</div>' +
+    section('Dues history', myDues, d => '<li><div class="row" style="align-items:center"><div class="grow"><div class="ttl">'+esc(d.period)+'</div>' +
+      '<div class="meta mono">'+peso(d.amount)+(d.method?' · '+esc(d.method):'')+'</div></div><span class="tag '+statusTag(d.status)+'">'+esc(d.status)+'</span></div></li>') +
+    section('Requests filed', myReq, r => '<li><div class="ttl">'+esc(r.title)+'</div><div class="meta">'+ago(r.at)+' · <span class="tag '+statusTag(r.status)+'">'+esc(r.status)+'</span></div></li>') +
+    section('Complaints filed', myCmp, c => '<li><div class="ttl">'+esc(c.title)+'</div><div class="meta">'+ago(c.filedAt)+' · <span class="tag '+statusTag(c.status)+'">'+esc(c.status)+'</span></div></li>') +
+    section('Facility bookings', myBk, b => '<li><div class="ttl">'+esc(b.facility)+'</div><div class="meta">'+esc(b.date)+' · '+esc(b.slot)+' · <span class="tag '+statusTag(b.status)+'">'+esc(b.status)+'</span></div></li>'),
+    acc ? 'Edit account' : 'Close',
+    () => { if(acc){ userForm(acc.id); return false; } return true; });
 }
 
 /* property */
