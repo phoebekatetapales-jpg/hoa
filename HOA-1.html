@@ -515,7 +515,7 @@ const store = {
   settings:{
     assocName:'HOA — Homeowners Association',
     address:'Solana Drive, Pila, Laguna',
-    duesAmount:1850, lateFeePct:2, dueDay:30,
+    duesRatePerSqm:12.5, lateFeePct:2, dueDay:30,
     facilities:['Function hall','Clubhouse','Basketball court','Swimming pool'],
     categories:['Advisory','Billing','Event','Security','Maintenance'],
     officeHours:'Mon–Sat, 8:00 AM – 5:00 PM',
@@ -545,11 +545,11 @@ const store = {
       detail:'A branch is leaning on the service wires at the back fence.', priority:'Normal', assignee:'Grounds crew', status:'Resolved', at:new Date(Date.now()-864e5*11), replies:[] }
   ],
   dues:[
-    { id:'d1', unit:'A-04', owner:'Marco Villanueva', period:'August 2026', amount:1850, status:'Paid', method:'GCash', paidAt:new Date(Date.now()-864e5*5) },
-    { id:'d2', unit:'B-12', owner:'Rina Dela Cruz', period:'August 2026', amount:1850, status:'Unpaid', method:'', paidAt:null },
-    { id:'d3', unit:'C-21', owner:'Jonna Reyes', period:'August 2026', amount:1850, status:'Overdue', method:'', paidAt:null },
-    { id:'d4', unit:'D-07', owner:'Ferdie Lim', period:'August 2026', amount:1850, status:'Paid', method:'Bank transfer', paidAt:new Date(Date.now()-864e5*9) },
-    { id:'d5', unit:'B-12', owner:'Rina Dela Cruz', period:'July 2026', amount:1850, status:'Paid', method:'GCash', paidAt:new Date(Date.now()-864e5*33) }
+    { id:'d1', unit:'A-04', owner:'Marco Villanueva', period:'August 2026', amount:2250, status:'Paid', method:'GCash', paidAt:new Date(Date.now()-864e5*5) },
+    { id:'d2', unit:'B-12', owner:'Rina Dela Cruz', period:'August 2026', amount:1875, status:'Unpaid', method:'', paidAt:null },
+    { id:'d3', unit:'C-21', owner:'Jonna Reyes', period:'August 2026', amount:1875, status:'Overdue', method:'', paidAt:null },
+    { id:'d4', unit:'D-07', owner:'Ferdie Lim', period:'August 2026', amount:2750, status:'Paid', method:'Bank transfer', paidAt:new Date(Date.now()-864e5*9) },
+    { id:'d5', unit:'B-12', owner:'Rina Dela Cruz', period:'July 2026', amount:1875, status:'Paid', method:'GCash', paidAt:new Date(Date.now()-864e5*33) }
   ],
   bookings:[
     { id:'k1', unit:'D-07', by:'Ferdie Lim', facility:'Function hall', date:'2026-09-06', slot:'2:00 PM – 8:00 PM', purpose:'Debut celebration', status:'Approved' },
@@ -705,6 +705,7 @@ function ago(d){ const s=(Date.now()-new Date(d))/1000;
 const initials = n => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const isAdmin = () => store.session.role === 'admin';
 const myUnit = () => store.session.unit;
+const unitDues = u => { const rec = store.units.find(x=>x.unit===(u&&u.unit!==undefined?u.unit:u)); const lot = rec ? rec.lot : 0; return Math.round(lot * store.settings.duesRatePerSqm); };
 const statusTag = s => ({
   'Paid':'t-emerald','Approved':'t-emerald','Resolved':'t-emerald','Closed':'t-emerald','Active':'t-emerald','Open ballot':'t-emerald',
   'Unpaid':'t-amber','Pending':'t-amber','In progress':'t-amber','Under review':'t-amber','For approval':'t-amber','Expiring':'t-amber','Used':'t-grey',
@@ -1246,10 +1247,11 @@ const ADMIN = {
         '</div>' +
         sectionCard('Unit registry',
           '<div class="tablewrap"><table><thead><tr><th>Unit</th><th>Owner of record</th><th class="hide-sm">Phase</th>' +
-          '<th class="hide-sm">Lot (sqm)</th><th>Occupancy</th></tr></thead><tbody>' +
+          '<th class="hide-sm">Lot (sqm)</th><th>Monthly dues</th><th>Occupancy</th></tr></thead><tbody>' +
           store.units.map(u => '<tr><td class="mono"><strong>'+esc(u.unit)+'</strong></td>' +
             '<td>'+esc(u.owner)+'<div class="meta">'+esc(u.type)+' · since '+esc(u.since)+'</div></td>' +
             '<td class="hide-sm">'+esc(u.phase)+'</td><td class="hide-sm mono">'+u.lot+'</td>' +
+            '<td class="mono">'+peso(unitDues(u))+'</td>' +
             '<td><span class="tag '+(u.occupancy==='Vacant'?'t-grey':u.occupancy==='Leased'?'t-amber':'t-emerald')+'">'+esc(u.occupancy)+'</span></td></tr>').join('') +
           '</tbody></table></div>',
           '<button class="btn btn-ghost btn-sm" onclick="unitForm()">Add unit</button>');
@@ -1473,14 +1475,17 @@ const ADMIN = {
         const s = store.settings;
         return sectionCard('Billing rules',
           '<div class="card-pad">' +
-          '<label class="fld"><span>Monthly dues per household (₱)</span><input class="input" id="cs_amt" type="number" value="'+s.duesAmount+'"></label>' +
+          '<label class="fld"><span>Dues rate (₱ per sqm of lot area)</span><input class="input" id="cs_rate" type="number" step="0.1" value="'+s.duesRatePerSqm+'"></label>' +
           '<div class="grid g-2" style="gap:0 12px">' +
             '<label class="fld"><span>Due day of month</span><input class="input" id="cs_day" type="number" min="1" max="31" value="'+s.dueDay+'"></label>' +
             '<label class="fld"><span>Late fee (%)</span><input class="input" id="cs_fee" type="number" value="'+s.lateFeePct+'"></label>' +
           '</div>' +
           '<button class="btn btn-primary" style="width:auto" onclick="saveBilling()">Save billing rules</button>' +
-          '<p class="meta" style="margin-top:10px">Changes show up in the homeowner portal immediately.</p></div>',
+          '<p class="meta" style="margin-top:10px">Every household is billed the same rate per square meter of lot area — no two units are charged a different amount for the same size, so there is no room for a collection dispute.</p></div>',
           '<button class="btn btn-ghost btn-sm" onclick="billingRun()">Generate next billing</button>') +
+        sectionCard('What each household would be billed', '<div class="tablewrap"><table><thead><tr><th>Unit</th><th class="hide-sm">Lot (sqm)</th><th>Monthly dues</th></tr></thead><tbody>' +
+          store.units.map(u => '<tr><td class="mono"><strong>'+esc(u.unit)+'</strong></td><td class="hide-sm mono">'+u.lot+'</td><td class="mono">'+peso(unitDues(u))+'</td></tr>').join('') +
+          '</tbody></table></div>') +
         sectionCard('Recently generated', store.reportLog.filter(r=>r.key==='collect').length ? '<ul class="list">' +
           store.reportLog.filter(r=>r.key==='collect').map(r =>
           '<li><div class="row" style="align-items:center"><div class="grow"><div class="ttl">'+esc(r.title)+'</div>' +
@@ -1981,7 +1986,7 @@ const HOME = {
     return head('Hello, '+s.name.split(' ')[0], 'Unit '+s.unit+' · '+(fresh ? fresh+' new update'+(fresh>1?'s':'')+' from the board' : 'You are all caught up')) +
     banner + voteBanner +
     '<div class="qa" style="margin-bottom:20px">' +
-      quick('peso','Pay dues', due && due.status==='Paid' ? 'August settled' : 'August · '+peso(store.settings.duesAmount), 'payForm()') +
+      quick('peso','Pay dues', due && due.status==='Paid' ? 'August settled' : 'August · '+peso(due ? due.amount : unitDues(myUnit())), 'payForm()') +
       quick('wrench','Report an issue','Streetlights, drainage, repairs','requestForm()') +
       quick('calendar','Book a facility','Hall, court, clubhouse, pool','bookForm()') +
     '</div>' +
@@ -2011,7 +2016,7 @@ const HOME = {
   mydues(){
     const mine = store.dues.filter(d=>d.unit===myUnit());
     const open = mine.find(d=>d.status!=='Paid');
-    return head('My dues','Unit '+myUnit()+' · '+peso(store.settings.duesAmount)+' a month, due on the '+store.settings.dueDay+'th',
+    return head('My dues','Unit '+myUnit()+' · '+peso(unitDues(myUnit()))+' a month ('+peso(store.settings.duesRatePerSqm)+'/sqm), due on the '+store.settings.dueDay+'th',
       open ? '<button class="btn btn-emerald" style="width:auto" onclick="payForm()">Pay '+esc(open.period)+'</button>' : '') +
     '<div class="card tablewrap"><table><thead><tr><th>Period</th><th>Amount</th><th class="hide-sm">Method</th><th>Status</th><th style="text-align:right">Paid on</th></tr></thead><tbody>' +
     mine.map(d => '<tr><td><strong>'+esc(d.period)+'</strong></td><td class="mono">'+peso(d.amount)+'</td>' +
@@ -2587,20 +2592,21 @@ function markPaid(id,method){ const d=store.dues.find(x=>x.id===id); d.status='P
 function remind(id){ const d=store.dues.find(x=>x.id===id);
   commit('Reminder sent to unit '+d.unit+' for '+d.period+'.',{title:'Reminder sent'}); }
 function billingRun(){
-  modal('Generate the next billing run','This creates an unpaid record for every household in the registry.',
+  modal('Generate the next billing run','This creates an unpaid record for every household in the registry, each billed at '+peso(store.settings.duesRatePerSqm)+' per square meter of lot area.',
     '<label class="fld"><span>Billing period</span><input class="input" id="f_per" value="September 2026"></label>' +
-    '<label class="fld"><span>Amount per household (₱)</span><input class="input" id="f_amt" type="number" value="'+store.settings.duesAmount+'"></label>',
+    '<div class="card card-pad" style="background:var(--paper)"><div class="kv"><span>Rate</span><b>'+peso(store.settings.duesRatePerSqm)+' / sqm</b></div>' +
+    '<div class="meta" style="margin-top:6px">Same rate for every unit — the amount only varies with each unit\'s lot area, so billing stays consistent and disputable-free.</div></div>',
     'Generate', () => {
-      const per=$('#f_per').value.trim(), amt=Number($('#f_amt').value)||store.settings.duesAmount;
+      const per=$('#f_per').value.trim();
       if(store.dues.some(d=>d.period===per)){ toast('info','Already billed','That period already exists in the ledger.'); return false; }
-      store.units.forEach(u => store.dues.push({ id:uid(), unit:u.unit, owner:u.owner, period:per, amount:amt, status:'Unpaid', method:'', paidAt:null }));
-      commit(per+' billing generated for '+store.units.length+' households at '+peso(amt)+' each.',{title:'Billing generated'}); return true; });
+      store.units.forEach(u => store.dues.push({ id:uid(), unit:u.unit, owner:u.owner, period:per, amount:unitDues(u), status:'Unpaid', method:'', paidAt:null }));
+      commit(per+' billing generated for '+store.units.length+' households at '+peso(store.settings.duesRatePerSqm)+' per sqm.',{title:'Billing generated'}); return true; });
 }
 function saveBilling(){
-  store.settings.duesAmount = Number($('#cs_amt').value)||store.settings.duesAmount;
+  store.settings.duesRatePerSqm = Number($('#cs_rate').value)||store.settings.duesRatePerSqm;
   store.settings.dueDay = Number($('#cs_day').value)||store.settings.dueDay;
   store.settings.lateFeePct = Number($('#cs_fee').value)||store.settings.lateFeePct;
-  commit('Billing rules updated — '+peso(store.settings.duesAmount)+' due on the '+store.settings.dueDay+'th.',{title:'Billing rules saved'});
+  commit('Billing rules updated — '+peso(store.settings.duesRatePerSqm)+' per sqm, due on the '+store.settings.dueDay+'th.',{title:'Billing rules saved'});
 }
 
 /* bookings */
@@ -2763,7 +2769,7 @@ function userForm(id, presetRole){
             occupancy:'Owner-occupied', since:String(new Date().getFullYear()) });
         if(!store.dues.some(d=>d.unit===unit && d.period==='August 2026'))
           store.dues.push({ id:uid(), unit, owner:name, period:'August 2026',
-            amount:store.settings.duesAmount, status:'Unpaid', method:'', paidAt:null });
+            amount:unitDues(unit), status:'Unpaid', method:'', paidAt:null });
       }
       commit(status==='Active'
         ? ROLE_LABEL(chosen)+' account added for '+name+'. Temporary password: '+temp
