@@ -293,6 +293,8 @@ main{padding:18px 14px 90px;max-width:1180px;width:100%;min-width:0}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);font-weight:700}
 td{padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.mkt-listings td{vertical-align:top}
+table.mkt-listings td:last-child{padding-top:11px}
 tr:last-child td{border-bottom:0}
 .tablewrap{overflow-x:auto}
 @media(max-width:640px){.hide-sm{display:none}}
@@ -1446,14 +1448,14 @@ const ADMIN = {
       },
       listings(){
         return sectionCard('All listings', store.marketplace.length
-          ? '<div class="tablewrap"><table><thead><tr><th>Listing</th><th class="hide-sm">Seller</th><th>Price</th><th>Status</th><th class="hide-sm">Decided</th><th></th></tr></thead><tbody>' +
+          ? '<div class="tablewrap"><table class="mkt-listings"><thead><tr><th>Listing</th><th class="hide-sm">Seller</th><th>Price</th><th>Status</th><th class="hide-sm">Decided</th><th></th></tr></thead><tbody>' +
           store.marketplace.map(m => '<tr><td><strong>'+esc(m.title)+'</strong><div class="meta">'+esc(m.category)+'</div></td>' +
             '<td class="hide-sm">'+esc(m.by)+'<div class="meta mono">'+esc(m.unit)+'</div></td>' +
             '<td class="mono">'+peso(m.price)+'</td>' +
             '<td><span class="tag '+statusTag(m.status)+'">'+esc(m.status)+'</span>' +
               (m.status==='Rejected'&&m.rejectReason?'<div class="meta">'+esc(m.rejectReason)+'</div>':'')+'</td>' +
             '<td class="hide-sm meta">'+(m.decidedAt?fmtDate(m.decidedAt)+' · '+esc(m.decidedBy):'—')+'</td>' +
-            '<td><button class="btn btn-danger btn-sm" onclick="deleteMktForm(\''+m.id+'\')">Remove</button></td></tr>').join('') +
+            '<td style="text-align:right"><button class="btn btn-danger btn-sm" onclick="deleteMktForm(\''+m.id+'\')">Remove</button></td></tr>').join('') +
           '</tbody></table></div>'
           : empty('No listings yet','Submissions from homeowners will show up here.'));
       }
