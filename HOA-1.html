@@ -40,9 +40,11 @@ a{color:var(--slate)}
 .auth-art>*{position:relative;z-index:1}
 .brandmark{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:800;letter-spacing:-.03em}
 .brandmark .glyph{width:44px;height:36px;border-radius:11px;display:grid;place-items:center;background:#fff;color:#3A4694;font-size:14px;flex:none;letter-spacing:-.04em}
-.partner-logo{display:inline-flex;margin-bottom:22px}
-.partner-logo img{display:block;height:64px;width:auto;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
-@media(max-width:480px){.partner-logo img{height:52px}}
+.brand-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.brand-row .divider-v{width:1px;align-self:stretch;min-height:34px;background:rgba(255,255,255,.3);flex:none}
+.partner-logo{display:inline-flex}
+.partner-logo img{display:block;height:50px;width:auto;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+@media(max-width:480px){.partner-logo img{height:42px}.brand-row{gap:12px}}
 .auth-art h1{font-size:clamp(30px,6.5vw,46px);font-weight:800;margin:34px 0 14px;max-width:14ch}
 .auth-art p{max-width:42ch;color:#D3D8F5;margin:0}
 .pulse-rail{display:flex;flex-direction:column;gap:10px;margin-top:36px}
@@ -378,8 +380,11 @@ html[data-theme="dark"] .bubble.mine{color:#0E121C}
 
 <div id="auth">
   <div class="auth-art">
-    <div class="partner-logo"><img src="multiply-talents-logo.png" alt="Multiply Talents"></div>
-    <div class="brandmark"><span class="glyph">HOA</span> Homeowners Association</div>
+    <div class="brand-row">
+      <div class="partner-logo"><img src="multiply-talents-logo.png" alt="Multiply Talents"></div>
+      <span class="divider-v" aria-hidden="true"></span>
+      <div class="brandmark"><span class="glyph">HOA</span> Homeowners Association</div>
+    </div>
     <div>
       <h1>The whole subdivision, on one page.</h1>
       <p>Dues, tickets, gate passes, elections and board announcements — for 412 households across three phases.</p>
