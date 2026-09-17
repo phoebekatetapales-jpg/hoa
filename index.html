@@ -332,6 +332,8 @@ tr:last-child td{border-bottom:0}
 .ballot .ph{width:44px;height:44px;border-radius:12px;background:var(--slate-tint);color:var(--slate-dk);display:grid;place-items:center;font-weight:700;flex:none;font-family:var(--display);overflow:hidden}
 .ph img,.cph img{width:100%;height:100%;object-fit:cover;display:block}
 .cph{width:36px;height:36px;border-radius:10px;background:var(--slate-tint);color:var(--slate-dk);display:grid;place-items:center;font-weight:700;flex:none;font-size:13px;overflow:hidden}
+.mkt-photo{width:100%;aspect-ratio:4/3;border-radius:var(--radius) var(--radius) 0 0;background:var(--paper);color:var(--ink-3);display:grid;place-items:center;overflow:hidden}
+.mkt-photo img{width:100%;height:100%;object-fit:cover;display:block}
 .modal-scrim{position:fixed;inset:0;background:rgba(16,23,37,.5);z-index:80;display:grid;place-items:end center}
 @media(min-width:640px){.modal-scrim{place-items:center;padding:22px}}
 .modal{background:#fff;width:100%;max-width:540px;border-radius:18px 18px 0 0;padding:20px;max-height:92dvh;overflow-y:auto;animation:sheetUp .26s cubic-bezier(.2,.7,.3,1)}
@@ -570,6 +572,21 @@ const store = {
     { id:'k3', unit:'C-21', by:'Jonna Reyes', facility:'Clubhouse', date:'2026-08-29', slot:'1:00 PM – 5:00 PM', purpose:'Bible study group', status:'Approved' },
     { id:'k4', unit:'B-12', by:'Rina Dela Cruz', facility:'Swimming pool', date:'2026-08-28', slot:'9:00 AM – 12:00 PM', purpose:'Kids swim lesson', status:'Approved' }
   ],
+  marketplace:[
+    { id:'m1', unit:'B-12', by:'Rina Dela Cruz', title:'Homemade ube halaya (250g jars)',
+      description:'Small-batch ube halaya, made with fresh ube and coconut milk. Good for pasalubong or dessert trays.',
+      price:180, category:'Food & Beverage', photo:'', status:'Approved', rejectReason:'',
+      submittedAt:new Date(Date.now()-864e5*6), decidedAt:new Date(Date.now()-864e5*5), decidedBy:'Arnel Bautista' },
+    { id:'m2', unit:'A-04', by:'Marco Villanueva', title:'Preloved kids bicycle (16-inch)',
+      description:'Outgrown by our youngest — light scratches only, tires and brakes still good. Pickup at A-04.',
+      price:1200, category:'Home & Living', photo:'', status:'Pending', rejectReason:'',
+      submittedAt:new Date(Date.now()-36e5*9), decidedAt:null, decidedBy:'' },
+    { id:'m3', unit:'D-07', by:'Ferdie Lim', title:'Car detailing service, weekends only',
+      description:'Full interior and exterior detailing at your carport. Booked by appointment on Saturdays and Sundays.',
+      price:1500, category:'Services', photo:'', status:'Rejected',
+      rejectReason:'Please limit the listing to residents of this subdivision — the write-up reads as open to outside customers too.',
+      submittedAt:new Date(Date.now()-864e5*3), decidedAt:new Date(Date.now()-864e5*2), decidedBy:'Arnel Bautista' }
+  ],
   events:[
     { id:'e1', title:'General assembly', date:'2026-09-13', time:'9:00 AM', where:'Covered court', note:'Budget report and officer elections.' },
     { id:'e2', title:'Clean-up drive', date:'2026-09-05', time:'6:30 AM', where:'Covered court', note:'₱200 dues credit per household.' },
@@ -702,6 +719,7 @@ const ROLE_LABEL = r => (ROLE_MATRIX.find(m=>m.role===r)||{label:r}).label;
 const REQ_TYPES = ['Streetlight','Drainage','Landscaping','Security','Garbage collection','Common area repair'];
 const CMP_TYPES = ['Noise','Parking','Pets','Garbage','Construction','Boundary','Other'];
 const CON_TOPICS = ['Suggestion','Question','Feedback','Facility','Billing'];
+const MKT_CATEGORIES = ['Food & Beverage','Home & Living','Fashion & Accessories','Electronics','Services','Other'];
 
 /* ============================================================
    HELPERS
@@ -739,7 +757,7 @@ function setDuesMode(mode){
 const statusTag = s => ({
   'Paid':'t-emerald','Approved':'t-emerald','Resolved':'t-emerald','Closed':'t-emerald','Active':'t-emerald','Open ballot':'t-emerald',
   'Unpaid':'t-amber','Pending':'t-amber','In progress':'t-amber','Under review':'t-amber','For approval':'t-amber','Expiring':'t-amber','Used':'t-grey',
-  'Open':'t-slate','Escalated':'t-rose','Overdue':'t-rose','Declined':'t-rose','Revoked':'t-rose'
+  'Open':'t-slate','Escalated':'t-rose','Overdue':'t-rose','Declined':'t-rose','Revoked':'t-rose','Rejected':'t-rose'
 }[s] || 't-grey');
 
 function commit(msg, opts={}){
@@ -993,6 +1011,7 @@ const NAV = {
       { id:'profiles',   label:'Homeowner Profiles',      icon:'users' },
       { id:'property',   label:'Property',                icon:'building' },
       { id:'operations', label:'Operations & Maintenance',icon:'wrench', badge:()=>store.requests.filter(r=>r.status!=='Resolved').length },
+      { id:'marketplace',label:'Marketplace',             icon:'tag', badge:()=>store.marketplace.filter(m=>m.status==='Pending').length },
       { id:'calendar',   label:'Calendar',                icon:'calendar' },
       { id:'security',   label:'Security & Access',       icon:'shield', badge:()=>store.passes.filter(p=>p.status==='Pending').length },
       { id:'governance', label:'Governance & Community',  icon:'megaphone', badge:()=>store.complaints.filter(c=>c.status!=='Resolved').length },
@@ -1052,7 +1071,8 @@ const NAV = {
       { id:'mydues',     label:'My dues',        icon:'peso' },
       { id:'myrequests', label:'My requests',    icon:'wrench' },
       { id:'events',     label:'Events',         icon:'calendar' },
-      { id:'book',       label:'Book a facility',icon:'grid' }
+      { id:'book',       label:'Book a facility',icon:'grid' },
+      { id:'marketplace',label:'Marketplace',    icon:'tag' }
     ]},
     { g:'Raise it with the board', items:[
       { id:'complaints', label:'Complaints', icon:'flag' },
@@ -1079,7 +1099,8 @@ const ICONS = {
   flag:'<path d="M4 21V4M4 5h11l-1.4 3.5L15 12H4"/>',
   ballot:'<path d="M4 9h16v11H4zM8 9V4h8v5M9 13h6"/>',
   chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5.2A8 8 0 1 1 21 12z"/>',
-  users:'<circle cx="9" cy="8" r="3.4"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16.5 5.2a3.4 3.4 0 0 1 0 6.6M18 14.4a6.5 6.5 0 0 1 3.5 5.6"/>'
+  users:'<circle cx="9" cy="8" r="3.4"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16.5 5.2a3.4 3.4 0 0 1 0 6.6M18 14.4a6.5 6.5 0 0 1 3.5 5.6"/>',
+  tag:'<path d="M11.5 3H5a2 2 0 0 0-2 2v6.5a2 2 0 0 0 .59 1.41l9.5 9.5a2 2 0 0 0 2.82 0l6.5-6.5a2 2 0 0 0 0-2.82l-9.5-9.5A2 2 0 0 0 11.5 3z"/><circle cx="8.5" cy="8.5" r="1.3"/>'
 };
 const svg = k => '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">'+ICONS[k]+'</svg>';
 
@@ -1399,6 +1420,43 @@ const ADMIN = {
         {id:'requests',label:'Requests',n:store.requests.filter(r=>r.status!=='Resolved').length},
         {id:'bookings',label:'Bookings',n:store.bookings.filter(b=>b.status==='Pending').length},
         {id:'schedule',label:'Preventive schedule'}],'requests') + inner;
+  },
+
+  /* ---------- MARKETPLACE ---------- */
+  marketplace(){
+    const t = tabOf('mktadm','pending');
+    const pending = store.marketplace.filter(m=>m.status==='Pending');
+    const inner = {
+      pending(){
+        return sectionCard('Pending listings', pending.length ? '<ul class="list">' + pending.map(m =>
+          '<li><div class="row"><div class="cph">'+(m.photo?'<img src="'+m.photo+'" alt="">':svg('tag'))+'</div><div class="grow">' +
+          '<div class="ttl">'+esc(m.title)+'</div>' +
+          '<div class="meta"><span class="tag t-grey">'+esc(m.category)+'</span><span class="mono">'+peso(m.price)+'</span>' +
+          '<span class="mono">'+esc(m.unit)+'</span>·<span>'+esc(m.by)+'</span>·<span>'+ago(m.submittedAt)+'</span></div>' +
+          '<div class="body">'+esc(m.description)+'</div>' +
+          '<div class="btn-row" style="margin-top:11px">' +
+            '<button class="btn btn-emerald btn-sm" onclick="approveMkt(\''+m.id+'\')">Approve</button>' +
+            '<button class="btn btn-danger btn-sm" onclick="rejectMktForm(\''+m.id+'\')">Reject</button>' +
+          '</div></div></div></li>').join('') + '</ul>'
+          : empty('Nothing waiting','New listings from homeowners will appear here first.'));
+      },
+      listings(){
+        return sectionCard('All listings', store.marketplace.length
+          ? '<div class="tablewrap"><table><thead><tr><th>Listing</th><th class="hide-sm">Seller</th><th>Price</th><th>Status</th><th class="hide-sm">Decided</th></tr></thead><tbody>' +
+          store.marketplace.map(m => '<tr><td><strong>'+esc(m.title)+'</strong><div class="meta">'+esc(m.category)+'</div></td>' +
+            '<td class="hide-sm">'+esc(m.by)+'<div class="meta mono">'+esc(m.unit)+'</div></td>' +
+            '<td class="mono">'+peso(m.price)+'</td>' +
+            '<td><span class="tag '+statusTag(m.status)+'">'+esc(m.status)+'</span>' +
+              (m.status==='Rejected'&&m.rejectReason?'<div class="meta">'+esc(m.rejectReason)+'</div>':'')+'</td>' +
+            '<td class="hide-sm meta">'+(m.decidedAt?fmtDate(m.decidedAt)+' · '+esc(m.decidedBy):'—')+'</td></tr>').join('') +
+          '</tbody></table></div>'
+          : empty('No listings yet','Submissions from homeowners will show up here.'));
+      }
+    }[t]();
+    return head('Marketplace','Review homeowner listings before they go public, and keep a record of past decisions.') +
+      tabs('mktadm',[
+        {id:'pending',label:'Pending',n:pending.length},
+        {id:'listings',label:'All listings',n:store.marketplace.length}],'pending') + inner;
   },
 
   /* ---------- MESSAGES ---------- */
@@ -1729,6 +1787,26 @@ function bookingTable(list, actions){
         ? '<div class="btn-row" style="justify-content:flex-end"><button class="btn btn-emerald btn-sm" onclick="setBooking(\''+b.id+'\',\'Approved\')">Approve</button>' +
           '<button class="btn btn-danger btn-sm" onclick="setBooking(\''+b.id+'\',\'Declined\')">Decline</button></div>'
         : '<span class="meta">Reviewed</span>')+'</td>' : '') + '</tr>').join('') + '</tbody></table></div>';
+}
+/* ---- marketplace: browse grid + a homeowner's own listings ---- */
+function mktCard(m){
+  return '<div class="card">' +
+    '<div class="mkt-photo">'+(m.photo?'<img src="'+m.photo+'" alt="">':'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+ICONS.tag+'</svg>')+'</div>' +
+    '<div class="card-pad">' +
+      '<div class="row" style="align-items:flex-start"><div class="grow"><div class="ttl">'+esc(m.title)+'</div>' +
+      '<div class="meta"><span class="tag t-grey">'+esc(m.category)+'</span></div></div>' +
+      '<div style="font-family:var(--display);font-weight:800;font-size:16.5px;white-space:nowrap">'+peso(m.price)+'</div></div>' +
+      '<div class="body">'+esc(m.description)+'</div>' +
+      '<div class="meta" style="margin-top:10px"><span class="mono">'+esc(m.unit)+'</span>·<span>'+esc(m.by)+'</span>·<span>'+ago(m.submittedAt)+'</span></div>' +
+    '</div></div>';
+}
+function mktMineRow(m){
+  return '<li><div class="row"><div class="grow"><div class="ttl">'+esc(m.title)+'</div>' +
+    '<div class="meta"><span class="tag t-grey">'+esc(m.category)+'</span><span class="mono">'+peso(m.price)+'</span><span>Submitted '+ago(m.submittedAt)+'</span></div>' +
+    '<div class="body">'+esc(m.description)+'</div>' +
+    (m.status==='Rejected' && m.rejectReason ? '<div class="card card-pad" style="background:var(--rose-tint);margin-top:10px;border:0">' +
+      '<strong style="font-size:13px;color:var(--rose)">Not approved</strong><div class="body" style="margin-top:4px">'+esc(m.rejectReason)+'</div></div>' : '') +
+    '</div><span class="tag '+statusTag(m.status)+'">'+esc(m.status)+'</span></div></li>';
 }
 function tallyBlock(compact){
   const e = store.election;
@@ -2162,6 +2240,28 @@ const HOME = {
       '<button class="card card-pad" style="text-align:left;cursor:pointer" onclick="bookForm(\''+esc(f)+'\')">' +
       '<div class="qi">'+svg('calendar')+'</div><div class="ttl">'+esc(f)+'</div><div class="meta">Tap to reserve</div></button>').join('') + '</div>' +
     sectionCard('My bookings', mine.length ? bookingTable(mine) : empty('Nothing reserved','Pick a facility above to send a request to the board.'));
+  },
+
+  /* ---------- MARKETPLACE ---------- */
+  marketplace(){
+    const t = tabOf('mkt','browse');
+    const approved = store.marketplace.filter(m=>m.status==='Approved');
+    const mine = store.marketplace.filter(m=>m.unit===myUnit());
+    const inner = {
+      browse(){
+        return approved.length ? '<div class="grid g-3">' + approved.map(mktCard).join('') + '</div>'
+          : '<div class="card">'+empty('Nothing listed yet','Approved listings from your neighbors will show up here.')+'</div>';
+      },
+      mine(){
+        return mine.length ? '<div class="card"><ul class="list">' + mine.map(mktMineRow).join('') + '</ul></div>'
+          : '<div class="card">'+empty('Nothing submitted yet','List a product below and the admin office will review it.')+'</div>';
+      }
+    }[t]();
+    return head('Marketplace','Buy and sell with your neighbors. New listings are reviewed by the admin office before they go public.',
+      '<button class="btn btn-primary" style="width:auto" onclick="marketplaceForm()">Sell an item</button>') +
+      tabs('mkt',[
+        {id:'browse',label:'Browse',n:approved.length},
+        {id:'mine',label:'My listings',n:mine.length}],'browse') + inner;
   },
 
   /* ---------- COMPLAINTS ---------- */
@@ -2671,6 +2771,60 @@ function requestForm(){
       autoAssign(item);
       store.requests.unshift(item);
       commit('Request filed by unit '+myUnit()+' — “'+title+'”.',{title:'Request submitted',chat:{kind:'request',id:item.id}}); return true; });
+}
+
+/* marketplace */
+let pendingMktPhoto = null;
+function handleMktPhotoFile(e){
+  const file = e.target.files && e.target.files[0];
+  e.target.value = ''; /* allow re-selecting the same file later */
+  if(!file) return;
+  fileToDataUrl(file, dataUrl => {
+    pendingMktPhoto = dataUrl;
+    const prev = document.getElementById('mktPhotoPreview');
+    if(prev) prev.innerHTML = '<img src="'+dataUrl+'" alt="">';
+  }, msg => toast('info','Could not use that photo',msg));
+}
+function marketplaceForm(){
+  pendingMktPhoto = null;
+  modal('Sell an item','Listed to the whole community once the admin office approves it — usually within a day.',
+    '<div class="row" style="align-items:center;gap:12px;margin-bottom:14px">' +
+      '<div class="cph" id="mktPhotoPreview" style="width:56px;height:56px;font-size:20px">'+svg('tag')+'</div>' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById(\'mktPhotoFile\').click()">Add photo</button>' +
+      '<input type="file" id="mktPhotoFile" accept="image/*" class="hide" onchange="handleMktPhotoFile(event)">' +
+    '</div>' +
+    '<div class="grid g-2" style="gap:0 12px">' +
+      '<label class="fld"><span>Category</span><select class="input" id="f_cat">'+MKT_CATEGORIES.map(c=>'<option>'+c+'</option>').join('')+'</select></label>' +
+      '<label class="fld"><span>Price (₱)</span><input class="input" id="f_price" type="number" min="0" step="1" placeholder="250"></label></div>' +
+    '<label class="fld"><span>Title</span><input class="input" id="f_title" placeholder="Homemade ube halaya (250g jar)"></label>' +
+    '<label class="fld"><span>Description</span><textarea class="input" id="f_desc" placeholder="What it is, condition, pickup or delivery…"></textarea></label>',
+    'Submit for approval', () => {
+      const title=$('#f_title').value.trim(), price=Number($('#f_price').value);
+      if(!title){ toast('info','Add a title','Give your listing a short title.'); return false; }
+      if(!price || price<=0){ toast('info','Add a price','Enter a price greater than zero.'); return false; }
+      const item = { id:uid(), unit:myUnit(), by:store.session.name, title,
+        description:$('#f_desc').value.trim()||'No further details given.', price, category:$('#f_cat').value,
+        photo:pendingMktPhoto||'', status:'Pending', rejectReason:'', submittedAt:new Date(), decidedAt:null, decidedBy:'' };
+      store.marketplace.unshift(item);
+      commit('Listing “'+title+'” sent to the admin office for approval.',
+        {title:'Listing submitted', audience:'admin', go:'marketplace'}); return true; });
+}
+function gotoMarketplace(){ isAdmin() ? (go('marketplace'), goTab('mktadm','pending')) : go('marketplace'); }
+function approveMkt(id){
+  const m = store.marketplace.find(x=>x.id===id);
+  m.status='Approved'; m.decidedAt=new Date(); m.decidedBy=store.session.name; m.rejectReason='';
+  commit('Listing “'+m.title+'” approved and now visible in the marketplace.',
+    {title:'Listing approved', forUnit:m.unit, go:gotoMarketplace}); }
+function rejectMktForm(id){
+  const m = store.marketplace.find(x=>x.id===id);
+  modal('Reject this listing','Optional — tell the seller why, so they can fix it and resubmit.',
+    '<div class="card card-pad" style="background:var(--paper);margin-bottom:14px"><div class="ttl">'+esc(m.title)+'</div>' +
+    '<div class="meta mono">'+esc(m.unit)+' · '+esc(m.by)+'</div></div>' +
+    '<label class="fld"><span>Reason (optional)</span><textarea class="input" id="f_reason" placeholder="e.g. Needs a clearer photo, or the price seems off."></textarea></label>',
+    'Reject listing', () => {
+      m.status='Rejected'; m.decidedAt=new Date(); m.decidedBy=store.session.name; m.rejectReason=$('#f_reason').value.trim();
+      commit('Listing “'+m.title+'” rejected'+(m.rejectReason?' — '+m.rejectReason:'.'),
+        {title:'Listing rejected', forUnit:m.unit, go:gotoMarketplace}); return true; }, true);
 }
 
 /* dues */
@@ -3270,6 +3424,15 @@ function fileToSquareDataUrl(file, size, onDone, onError){
     img.onerror = () => onError('Could not read that image. Try a different file.');
     img.src = reader.result;
   };
+  reader.onerror = () => onError('Could not read that file. Try again.');
+  reader.readAsDataURL(file);
+}
+/* shared: read an image file as-is (no cropping) — used where the original aspect ratio matters, like a product photo */
+function fileToDataUrl(file, onDone, onError){
+  if(!file.type.startsWith('image/')){ onError('Choose a photo file — JPG, PNG, etc.'); return; }
+  if(file.size > 8*1024*1024){ onError('Pick a photo under 8 MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = () => onDone(reader.result);
   reader.onerror = () => onError('Could not read that file. Try again.');
   reader.readAsDataURL(file);
 }
