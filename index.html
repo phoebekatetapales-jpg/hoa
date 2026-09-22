@@ -1247,6 +1247,16 @@ function onProfileSearch(v){
   if(el){ el.focus(); if(pos!=null) el.setSelectionRange(pos,pos); }
 }
 
+let gateFilter = '';
+function onGateSearch(v){
+  gateFilter = v;
+  const active = document.activeElement;
+  const pos = active && active.id==='gateSearchInput' ? active.selectionStart : null;
+  render();
+  const el = $('#gateSearchInput');
+  if(el){ el.focus(); if(pos!=null) el.setSelectionRange(pos,pos); }
+}
+
 /* ============================================================
    ADMIN VIEWS
 ============================================================ */
@@ -2546,6 +2556,9 @@ const RENTER = {
 const SECURITY = {
   gate(){
     const active = store.passes.filter(p=>p.status==='Active');
+    const term = gateFilter.trim().toLowerCase();
+    const filtered = store.passes.filter(p => !term ||
+      p.code.toLowerCase().includes(term) || p.visitor.toLowerCase().includes(term));
     return head('Pass validation','Check a code at the gate, then mark it used. Resident billing and board records are not available on this account.',
       '<button class="btn btn-primary" style="width:auto" onclick="validateForm()">Validate a code</button>') +
     '<div class="grid g-4" style="margin-bottom:14px">' +
@@ -2554,16 +2567,20 @@ const SECURITY = {
       stat('Pending', store.passes.filter(p=>p.status==='Pending').length, 'Not yet approved') +
       stat('On post', store.guards.length, 'Guards this cycle') +
     '</div>' +
-    sectionCard('Expected visitors',
+    '<div class="fld" style="max-width:360px">' +
+      '<input class="input" id="gateSearchInput" type="text" placeholder="Search by code or visitor name…" value="'+esc(gateFilter)+'" oninput="onGateSearch(this.value)">' +
+    '</div>' +
+    sectionCard('Expected visitors', filtered.length ?
       '<div class="tablewrap"><table><thead><tr><th>Code</th><th>Visitor</th><th class="hide-sm">Unit</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>' +
-      store.passes.map(p => '<tr><td class="mono"><strong>'+esc(p.code)+'</strong></td>' +
+      filtered.map(p => '<tr><td class="mono"><strong>'+esc(p.code)+'</strong></td>' +
         '<td>'+esc(p.visitor)+'<div class="meta">'+esc(p.plate)+'</div></td>' +
         '<td class="hide-sm mono">'+esc(p.unit)+'</td><td>'+fmtDate(p.date)+'</td>' +
         '<td><span class="tag '+statusTag(p.status)+'">'+esc(p.status)+'</span></td>' +
         '<td style="text-align:right">'+(p.status==='Active'
           ? '<button class="btn btn-emerald btn-sm" onclick="setPass(\''+p.id+'\',\'Used\')">Mark entered</button>'
           : '<span class="meta">'+(p.status==='Pending'?'Awaiting admin':'Closed')+'</span>')+'</td></tr>').join('') +
-      '</tbody></table></div>');
+      '</tbody></table></div>'
+      : empty('No matches', 'No pass code or visitor name matches “'+gateFilter+'”.'));
   },
   vehicles(){
     return head('Vehicle lookup','Check a plate against the registered RFID tags.') +
