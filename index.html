@@ -309,17 +309,17 @@ tr:last-child td{border-bottom:0}
 .tablewrap{overflow-x:auto}
 @media(max-width:640px){.hide-sm{display:none}}
 @media(max-width:640px){
-  table.stack-mobile thead{display:none}
-  table.stack-mobile, table.stack-mobile tbody, table.stack-mobile tr, table.stack-mobile td{display:block;width:100%}
-  table.stack-mobile{border:0}
-  table.stack-mobile tr{border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px}
-  table.stack-mobile tr:last-child{margin-bottom:0}
-  table.stack-mobile td{padding:7px 0;border-bottom:1px dashed var(--line)}
-  table.stack-mobile td:last-child{border-bottom:0;padding-top:11px}
-  table.stack-mobile td.hide-sm{display:block}
-  table.stack-mobile td[data-label]::before{content:attr(data-label);display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
-  table.stack-mobile td[style*="text-align:right"]{text-align:left}
-  table.stack-mobile .btn-row{justify-content:flex-start}
+  .tablewrap table thead{display:none}
+  .tablewrap table, .tablewrap table tbody, .tablewrap table tr, .tablewrap table td{display:block;width:100%}
+  .tablewrap table{border:0}
+  .tablewrap table tr{border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px}
+  .tablewrap table tr:last-child{margin-bottom:0}
+  .tablewrap table td{padding:7px 0;border-bottom:1px dashed var(--line)}
+  .tablewrap table td:last-child{border-bottom:0;padding-top:11px}
+  .tablewrap table td.hide-sm{display:block}
+  .tablewrap table td[data-label]::before{content:attr(data-label);display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+  .tablewrap table td[style*="text-align:right"]{text-align:left}
+  .tablewrap table .btn-row{justify-content:flex-start}
 }
 .progress{height:7px;background:var(--paper);border-radius:20px;overflow:hidden;border:1px solid var(--line)}
 .progress i{display:block;height:100%;background:var(--emerald);transition:width .5s cubic-bezier(.2,.7,.3,1)}
@@ -1425,11 +1425,11 @@ const ADMIN = {
         sectionCard('Unit registry',
           '<div class="tablewrap"><table><thead><tr><th>Unit</th><th>Owner of record</th><th class="hide-sm">Phase</th>' +
           '<th class="hide-sm">Lot (sqm)</th><th>Monthly dues</th><th>Occupancy</th></tr></thead><tbody>' +
-          store.units.map(u => '<tr><td class="mono"><strong>'+esc(u.unit)+'</strong></td>' +
-            '<td>'+esc(u.owner)+'<div class="meta">'+esc(u.type)+' · since '+esc(u.since)+'</div></td>' +
-            '<td class="hide-sm">'+esc(u.phase)+'</td><td class="hide-sm mono">'+u.lot+'</td>' +
-            '<td class="mono">'+peso(unitDues(u))+'</td>' +
-            '<td><span class="tag '+(u.occupancy==='Vacant'?'t-grey':u.occupancy==='Leased'?'t-amber':'t-emerald')+'">'+esc(u.occupancy)+'</span></td></tr>').join('') +
+          store.units.map(u => '<tr><td class="mono" data-label="Unit"><strong>'+esc(u.unit)+'</strong></td>' +
+            '<td data-label="Owner of record">'+esc(u.owner)+'<div class="meta">'+esc(u.type)+' · since '+esc(u.since)+'</div></td>' +
+            '<td class="hide-sm" data-label="Phase">'+esc(u.phase)+'</td><td class="hide-sm mono" data-label="Lot (sqm)">'+u.lot+'</td>' +
+            '<td class="mono" data-label="Monthly dues">'+peso(unitDues(u))+'</td>' +
+            '<td data-label="Occupancy"><span class="tag '+(u.occupancy==='Vacant'?'t-grey':u.occupancy==='Leased'?'t-amber':'t-emerald')+'">'+esc(u.occupancy)+'</span></td></tr>').join('') +
           '</tbody></table></div>',
           '<button class="btn btn-ghost btn-sm" onclick="unitForm()">Add unit</button>');
       },
@@ -1477,8 +1477,8 @@ const ADMIN = {
         ];
         return sectionCard('Preventive maintenance',
           '<div class="tablewrap"><table><thead><tr><th>Task</th><th class="hide-sm">Frequency</th><th>Next due</th><th class="hide-sm">Owner</th></tr></thead><tbody>' +
-          pm.map(p => '<tr><td><strong>'+esc(p.task)+'</strong></td><td class="hide-sm">'+esc(p.freq)+'</td>' +
-            '<td>'+fmtDate(p.next)+'</td><td class="hide-sm">'+esc(p.owner)+'</td></tr>').join('') + '</tbody></table></div>');
+          pm.map(p => '<tr><td data-label="Task"><strong>'+esc(p.task)+'</strong></td><td class="hide-sm" data-label="Frequency">'+esc(p.freq)+'</td>' +
+            '<td data-label="Next due">'+fmtDate(p.next)+'</td><td class="hide-sm" data-label="Owner">'+esc(p.owner)+'</td></tr>').join('') + '</tbody></table></div>');
       }
     }[t]();
     return head('Operations & Maintenance','Tickets from homeowners, facility use and the standing maintenance calendar.') +
@@ -1509,12 +1509,12 @@ const ADMIN = {
       listings(){
         return sectionCard('All listings', store.marketplace.length
           ? '<div class="tablewrap"><table class="mkt-listings"><thead><tr><th>Listing</th><th class="hide-sm">Seller</th><th>Price</th><th>Status</th><th class="hide-sm">Decided</th><th></th></tr></thead><tbody>' +
-          store.marketplace.map(m => '<tr><td><strong>'+esc(m.title)+'</strong><div class="meta">'+esc(m.category)+'</div></td>' +
-            '<td class="hide-sm">'+esc(m.by)+'<div class="meta mono">'+esc(m.unit)+'</div></td>' +
-            '<td class="mono">'+peso(m.price)+'</td>' +
-            '<td><span class="tag '+statusTag(m.status)+'">'+esc(m.status)+'</span>' +
+          store.marketplace.map(m => '<tr><td data-label="Listing"><strong>'+esc(m.title)+'</strong><div class="meta">'+esc(m.category)+'</div></td>' +
+            '<td class="hide-sm" data-label="Seller">'+esc(m.by)+'<div class="meta mono">'+esc(m.unit)+'</div></td>' +
+            '<td class="mono" data-label="Price">'+peso(m.price)+'</td>' +
+            '<td data-label="Status"><span class="tag '+statusTag(m.status)+'">'+esc(m.status)+'</span>' +
               (m.status==='Rejected'&&m.rejectReason?'<div class="meta">'+esc(m.rejectReason)+'</div>':'')+'</td>' +
-            '<td class="hide-sm meta">'+(m.decidedAt?fmtDate(m.decidedAt)+' · '+esc(m.decidedBy):'—')+'</td>' +
+            '<td class="hide-sm meta" data-label="Decided">'+(m.decidedAt?fmtDate(m.decidedAt)+' · '+esc(m.decidedBy):'—')+'</td>' +
             '<td style="text-align:right"><button class="btn btn-danger btn-sm" onclick="deleteMktForm(\''+m.id+'\')">Remove</button></td></tr>').join('') +
           '</tbody></table></div>'
           : empty('No listings yet','Submissions from homeowners will show up here.'));
@@ -1543,9 +1543,9 @@ const ADMIN = {
       passes(){
         return sectionCard('Visitor passes',
           '<div class="tablewrap"><table><thead><tr><th>Visitor</th><th class="hide-sm">Unit</th><th>Date</th><th>Code</th><th>Status</th><th></th></tr></thead><tbody>' +
-          store.passes.map(p => '<tr><td><strong>'+esc(p.visitor)+'</strong><div class="meta">'+esc(p.purpose)+(p.plate!=='—'?' · '+esc(p.plate):'')+'</div></td>' +
-            '<td class="hide-sm mono">'+esc(p.unit)+'</td><td>'+fmtDate(p.date)+'</td><td class="mono">'+esc(p.code)+'</td>' +
-            '<td><span class="tag '+statusTag(p.status)+'">'+esc(p.status)+'</span></td>' +
+          store.passes.map(p => '<tr><td data-label="Visitor"><strong>'+esc(p.visitor)+'</strong><div class="meta">'+esc(p.purpose)+(p.plate!=='—'?' · '+esc(p.plate):'')+'</div></td>' +
+            '<td class="hide-sm mono" data-label="Unit">'+esc(p.unit)+'</td><td data-label="Date">'+fmtDate(p.date)+'</td><td class="mono" data-label="Code">'+esc(p.code)+'</td>' +
+            '<td data-label="Status"><span class="tag '+statusTag(p.status)+'">'+esc(p.status)+'</span></td>' +
             '<td style="text-align:right">'+(p.status==='Pending'
               ? '<div class="btn-row" style="justify-content:flex-end"><button class="btn btn-emerald btn-sm" onclick="setPass(\''+p.id+'\',\'Active\')">Approve</button>' +
                 '<button class="btn btn-danger btn-sm" onclick="setPass(\''+p.id+'\',\'Revoked\')">Deny</button></div>'
@@ -1554,9 +1554,9 @@ const ADMIN = {
       stickers(){
         return sectionCard('Vehicle stickers and RFID',
           '<div class="tablewrap"><table><thead><tr><th>Plate</th><th>Vehicle</th><th class="hide-sm">Unit</th><th class="hide-sm">Tag</th><th>Expires</th><th>Status</th></tr></thead><tbody>' +
-          store.stickers.map(s => '<tr><td class="mono"><strong>'+esc(s.plate)+'</strong></td><td>'+esc(s.vehicle)+'</td>' +
-            '<td class="hide-sm mono">'+esc(s.unit)+'</td><td class="hide-sm mono">'+esc(s.tag)+'</td>' +
-            '<td>'+fmtDate(s.expires)+'</td><td><span class="tag '+statusTag(s.status)+'">'+esc(s.status)+'</span></td></tr>').join('') +
+          store.stickers.map(s => '<tr><td class="mono" data-label="Plate"><strong>'+esc(s.plate)+'</strong></td><td data-label="Vehicle">'+esc(s.vehicle)+'</td>' +
+            '<td class="hide-sm mono" data-label="Unit">'+esc(s.unit)+'</td><td class="hide-sm mono" data-label="Tag">'+esc(s.tag)+'</td>' +
+            '<td data-label="Expires">'+fmtDate(s.expires)+'</td><td data-label="Status"><span class="tag '+statusTag(s.status)+'">'+esc(s.status)+'</span></td></tr>').join('') +
           '</tbody></table></div>',
           '<button class="btn btn-ghost btn-sm" onclick="stickerForm()">Issue sticker</button>');
       },
@@ -1572,8 +1572,8 @@ const ADMIN = {
       guards(){
         return sectionCard('Guard roster',
           '<div class="tablewrap"><table><thead><tr><th>Post</th><th>Guard on duty</th><th>Shift</th><th class="hide-sm">Contact</th></tr></thead><tbody>' +
-          store.guards.map(g => '<tr><td>'+esc(g.post)+'</td><td><strong>'+esc(g.name)+'</strong></td><td>'+esc(g.shift)+'</td>' +
-            '<td class="hide-sm mono">'+esc(g.contact)+'</td></tr>').join('') + '</tbody></table></div>');
+          store.guards.map(g => '<tr><td data-label="Post">'+esc(g.post)+'</td><td data-label="Guard on duty"><strong>'+esc(g.name)+'</strong></td><td data-label="Shift">'+esc(g.shift)+'</td>' +
+            '<td class="hide-sm mono" data-label="Contact">'+esc(g.contact)+'</td></tr>').join('') + '</tbody></table></div>');
       }
     }[t]();
     return head('Security & Access Control','Gate passes, vehicle tags, the incident log and who is on post.') +
@@ -1704,7 +1704,7 @@ const ADMIN = {
             : 'Every household is billed the exact same flat amount regardless of lot size.') + '</p></div>',
           '<button class="btn btn-ghost btn-sm" onclick="billingRun()">Generate next billing</button>') +
         sectionCard('What each household would be billed', '<div class="tablewrap"><table><thead><tr><th>Unit</th><th class="hide-sm">Lot (sqm)</th><th>Monthly dues</th></tr></thead><tbody>' +
-          store.units.map(u => '<tr><td class="mono"><strong>'+esc(u.unit)+'</strong></td><td class="hide-sm mono">'+u.lot+'</td><td class="mono">'+peso(unitDues(u))+'</td></tr>').join('') +
+          store.units.map(u => '<tr><td class="mono" data-label="Unit"><strong>'+esc(u.unit)+'</strong></td><td class="hide-sm mono" data-label="Lot (sqm)">'+u.lot+'</td><td class="mono" data-label="Monthly dues">'+peso(unitDues(u))+'</td></tr>').join('') +
           '</tbody></table></div>') +
         sectionCard('Recently generated', store.reportLog.filter(r=>r.key==='collect').length ? '<ul class="list">' +
           store.reportLog.filter(r=>r.key==='collect').map(r =>
@@ -1715,15 +1715,15 @@ const ADMIN = {
       collections(){
         return sectionCard('Collections by phase',
           '<div class="tablewrap"><table><thead><tr><th>Phase</th><th class="hide-sm">Units</th><th>Collected</th><th class="hide-sm">Billed</th><th>Rate</th></tr></thead><tbody>' +
-          phaseCollections().map(p => '<tr><td><strong>'+esc(p.phase)+'</strong></td><td class="hide-sm mono">'+p.units+'</td>' +
-            '<td class="mono">'+peso(p.collected)+'</td><td class="hide-sm mono">'+peso(p.billed)+'</td>' +
-            '<td><div class="row" style="align-items:center;gap:8px"><div class="progress" style="width:70px"><i style="width:'+p.pct+'%"></i></div><span class="mono" style="font-size:12.5px">'+p.pct+'%</span></div></td></tr>').join('') +
+          phaseCollections().map(p => '<tr><td data-label="Phase"><strong>'+esc(p.phase)+'</strong></td><td class="hide-sm mono" data-label="Units">'+p.units+'</td>' +
+            '<td class="mono" data-label="Collected">'+peso(p.collected)+'</td><td class="hide-sm mono" data-label="Billed">'+peso(p.billed)+'</td>' +
+            '<td data-label="Rate"><div class="row" style="align-items:center;gap:8px"><div class="progress" style="width:70px"><i style="width:'+p.pct+'%"></i></div><span class="mono" style="font-size:12.5px">'+p.pct+'%</span></div></td></tr>').join('') +
           '</tbody></table></div>') +
         sectionCard('Dues ledger',
           '<div class="tablewrap"><table><thead><tr><th>Household</th><th class="hide-sm">Period</th><th>Amount</th><th class="hide-sm">Method</th><th>Status</th><th></th></tr></thead><tbody>' +
-          store.dues.map(d => '<tr><td><button class="btn-ghost" style="border:0;background:none;padding:0;cursor:pointer;text-align:left;font:inherit;color:var(--slate)" onclick="homeownerProfile(\''+d.unit+'\')"><strong>'+esc(d.owner)+'</strong></button><div class="meta mono">'+esc(d.unit)+'</div></td>' +
-            '<td class="hide-sm">'+esc(d.period)+'</td><td class="mono">'+peso(d.amount)+'</td>' +
-            '<td class="hide-sm">'+esc(d.method||'—')+'</td><td><span class="tag '+statusTag(d.status)+'">'+esc(d.status)+'</span></td>' +
+          store.dues.map(d => '<tr><td data-label="Household"><button class="btn-ghost" style="border:0;background:none;padding:0;cursor:pointer;text-align:left;font:inherit;color:var(--slate)" onclick="homeownerProfile(\''+d.unit+'\')"><strong>'+esc(d.owner)+'</strong></button><div class="meta mono">'+esc(d.unit)+'</div></td>' +
+            '<td class="hide-sm" data-label="Period">'+esc(d.period)+'</td><td class="mono" data-label="Amount">'+peso(d.amount)+'</td>' +
+            '<td class="hide-sm" data-label="Method">'+esc(d.method||'—')+'</td><td data-label="Status"><span class="tag '+statusTag(d.status)+'">'+esc(d.status)+'</span></td>' +
             '<td style="text-align:right">'+(d.status==='Paid'
               ? '<span class="meta">'+fmtDate(d.paidAt)+'</span>'
               : '<div class="btn-row" style="justify-content:flex-end"><button class="btn btn-ghost btn-sm" onclick="markPaid(\''+d.id+'\',\'Office cash\')">Record payment</button>' +
@@ -1743,10 +1743,10 @@ const ADMIN = {
       disbursement(){
         return sectionCard('Disbursements',
           '<div class="tablewrap"><table><thead><tr><th>Date</th><th>Payee</th><th class="hide-sm">Category</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>' +
-          store.expenses.map(x => '<tr><td class="meta">'+fmtDate(x.date)+'</td>' +
-            '<td><strong>'+esc(x.payee)+'</strong><div class="meta">'+esc(x.memo)+'</div></td>' +
-            '<td class="hide-sm">'+esc(x.category)+'</td><td class="mono">'+peso(x.amount)+'</td>' +
-            '<td><span class="tag '+statusTag(x.status)+'">'+esc(x.status)+'</span></td>' +
+          store.expenses.map(x => '<tr><td class="meta" data-label="Date">'+fmtDate(x.date)+'</td>' +
+            '<td data-label="Payee"><strong>'+esc(x.payee)+'</strong><div class="meta">'+esc(x.memo)+'</div></td>' +
+            '<td class="hide-sm" data-label="Category">'+esc(x.category)+'</td><td class="mono" data-label="Amount">'+peso(x.amount)+'</td>' +
+            '<td data-label="Status"><span class="tag '+statusTag(x.status)+'">'+esc(x.status)+'</span></td>' +
             '<td style="text-align:right">'+(x.status==='For approval'
               ? '<button class="btn btn-emerald btn-sm" onclick="approveExpense(\''+x.id+'\')">Approve</button>'
               : '<span class="meta">Cleared</span>')+'</td></tr>').join('') +
@@ -1845,11 +1845,11 @@ function prefToggle(label, desc, key){
 function bookingTable(list, actions){
   if(!list.length) return empty('No bookings','Homeowners can reserve the hall, court or pool from their portal.');
   return '<div class="tablewrap"><table><thead><tr><th>Facility</th><th>When</th><th class="hide-sm">Requested by</th><th>Status</th>'+(actions?'<th></th>':'')+'</tr></thead><tbody>' +
-    list.map(b => '<tr><td><strong>'+esc(b.facility)+'</strong><div class="meta">'+esc(b.purpose)+'</div></td>' +
-      '<td>'+fmtDate(b.date)+'<div class="meta">'+esc(b.slot)+'</div></td>' +
-      '<td class="hide-sm">'+esc(b.by)+'<div class="meta mono">'+esc(b.unit)+'</div>'+
+    list.map(b => '<tr><td data-label="Facility"><strong>'+esc(b.facility)+'</strong><div class="meta">'+esc(b.purpose)+'</div></td>' +
+      '<td data-label="When">'+fmtDate(b.date)+'<div class="meta">'+esc(b.slot)+'</div></td>' +
+      '<td class="hide-sm" data-label="Requested by">'+esc(b.by)+'<div class="meta mono">'+esc(b.unit)+'</div>'+
         (b.bookedByStaff?'<div class="meta">Added by '+esc(b.bookedByStaff)+'</div>':'')+'</td>' +
-      '<td><span class="tag '+statusTag(b.status)+'">'+esc(b.status)+'</span></td>' +
+      '<td data-label="Status"><span class="tag '+statusTag(b.status)+'">'+esc(b.status)+'</span></td>' +
       (actions ? '<td style="text-align:right">'+(b.status==='Pending'
         ? '<div class="btn-row" style="justify-content:flex-end"><button class="btn btn-emerald btn-sm" onclick="setBooking(\''+b.id+'\',\'Approved\')">Approve</button>' +
           '<button class="btn btn-danger btn-sm" onclick="setBooking(\''+b.id+'\',\'Declined\')">Decline</button></div>'
@@ -2265,9 +2265,9 @@ const HOME = {
     return head('My dues','Unit '+myUnit()+' · '+peso(unitDues(myUnit()))+' a month'+(store.settings.duesMode==='sqm' ? ' ('+peso(store.settings.duesRatePerSqm)+'/sqm)' : ' (flat rate)')+', due on the '+store.settings.dueDay+'th',
       open ? '<button class="btn btn-emerald" style="width:auto" onclick="payForm()">Pay '+esc(open.period)+'</button>' : '') +
     '<div class="card tablewrap"><table><thead><tr><th>Period</th><th>Amount</th><th class="hide-sm">Method</th><th>Status</th><th style="text-align:right">Paid on</th></tr></thead><tbody>' +
-    mine.map(d => '<tr><td><strong>'+esc(d.period)+'</strong></td><td class="mono">'+peso(d.amount)+'</td>' +
-      '<td class="hide-sm">'+esc(d.method||'—')+'</td><td><span class="tag '+statusTag(d.status)+'">'+esc(d.status)+'</span></td>' +
-      '<td style="text-align:right" class="meta">'+(d.paidAt?fmtDate(d.paidAt):'—')+'</td></tr>').join('') + '</tbody></table></div>';
+    mine.map(d => '<tr><td data-label="Period"><strong>'+esc(d.period)+'</strong></td><td class="mono" data-label="Amount">'+peso(d.amount)+'</td>' +
+      '<td class="hide-sm" data-label="Method">'+esc(d.method||'—')+'</td><td data-label="Status"><span class="tag '+statusTag(d.status)+'">'+esc(d.status)+'</span></td>' +
+      '<td style="text-align:right" class="meta" data-label="Paid on">'+(d.paidAt?fmtDate(d.paidAt):'—')+'</td></tr>').join('') + '</tbody></table></div>';
   },
 
   myrequests(){
@@ -2315,9 +2315,9 @@ const HOME = {
     return head('Visitor pass','Log a visitor before they arrive so the guardhouse knows to expect them. New passes need a quick approval before the code goes active.',
       '<button class="btn btn-primary" style="width:auto" onclick="visitorForm()">Log a visitor</button>') +
     (mine.length ? '<div class="card tablewrap"><table><thead><tr><th>Visitor</th><th class="hide-sm">Purpose</th><th>Date</th><th>Code</th><th>Status</th></tr></thead><tbody>' +
-      mine.map(p => '<tr><td><strong>'+esc(p.visitor)+'</strong>'+(p.plate!=='—'?'<div class="meta mono">'+esc(p.plate)+'</div>':'')+'</td>' +
-        '<td class="hide-sm">'+esc(p.purpose)+'</td><td>'+fmtDate(p.date)+'</td><td class="mono">'+esc(p.code)+'</td>' +
-        '<td><span class="tag '+statusTag(p.status)+'">'+esc(p.status)+'</span></td></tr>').join('') + '</tbody></table></div>'
+      mine.map(p => '<tr><td data-label="Visitor"><strong>'+esc(p.visitor)+'</strong>'+(p.plate!=='—'?'<div class="meta mono">'+esc(p.plate)+'</div>':'')+'</td>' +
+        '<td class="hide-sm" data-label="Purpose">'+esc(p.purpose)+'</td><td data-label="Date">'+fmtDate(p.date)+'</td><td class="mono" data-label="Code">'+esc(p.code)+'</td>' +
+        '<td data-label="Status"><span class="tag '+statusTag(p.status)+'">'+esc(p.status)+'</span></td></tr>').join('') + '</tbody></table></div>'
       : '<div class="card">'+empty('No visitor passes yet','Log a visitor, delivery or contractor and the admin office will clear them for the gate.')+'</div>');
   },
 
@@ -2489,7 +2489,7 @@ function visibleAnnouncements(){
 function matrixTable(){
   return '<div class="tablewrap"><table class="mtable"><thead><tr>' +
     '<th>User role</th><th>Primary experience</th><th>Examples of restricted information</th></tr></thead><tbody>' +
-    ROLE_MATRIX.map(m => '<tr><td>'+esc(m.label)+'</td><td>'+esc(m.exp)+'</td><td>'+esc(m.deny)+'</td></tr>').join('') +
+    ROLE_MATRIX.map(m => '<tr><td data-label="User role">'+esc(m.label)+'</td><td data-label="Primary experience">'+esc(m.exp)+'</td><td data-label="Examples of restricted information">'+esc(m.deny)+'</td></tr>').join('') +
     '</tbody></table></div>';
 }
 function matrixStack(){
@@ -2572,10 +2572,10 @@ const SECURITY = {
     '</div>' +
     sectionCard('Expected visitors', filtered.length ?
       '<div class="tablewrap"><table><thead><tr><th>Code</th><th>Visitor</th><th class="hide-sm">Unit</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>' +
-      filtered.map(p => '<tr><td class="mono"><strong>'+esc(p.code)+'</strong></td>' +
-        '<td>'+esc(p.visitor)+'<div class="meta">'+esc(p.plate)+'</div></td>' +
-        '<td class="hide-sm mono">'+esc(p.unit)+'</td><td>'+fmtDate(p.date)+'</td>' +
-        '<td><span class="tag '+statusTag(p.status)+'">'+esc(p.status)+'</span></td>' +
+      filtered.map(p => '<tr><td class="mono" data-label="Code"><strong>'+esc(p.code)+'</strong></td>' +
+        '<td data-label="Visitor">'+esc(p.visitor)+'<div class="meta">'+esc(p.plate)+'</div></td>' +
+        '<td class="hide-sm mono" data-label="Unit">'+esc(p.unit)+'</td><td data-label="Date">'+fmtDate(p.date)+'</td>' +
+        '<td data-label="Status"><span class="tag '+statusTag(p.status)+'">'+esc(p.status)+'</span></td>' +
         '<td style="text-align:right">'+(p.status==='Active'
           ? '<button class="btn btn-emerald btn-sm" onclick="setPass(\''+p.id+'\',\'Used\')">Mark entered</button>'
           : '<span class="meta">'+(p.status==='Pending'?'Awaiting admin':'Closed')+'</span>')+'</td></tr>').join('') +
@@ -2586,9 +2586,9 @@ const SECURITY = {
     return head('Vehicle lookup','Check a plate against the registered RFID tags.') +
     sectionCard('Registered vehicles',
       '<div class="tablewrap"><table><thead><tr><th>Plate</th><th>Vehicle</th><th class="hide-sm">Unit</th><th class="hide-sm">Tag</th><th>Status</th></tr></thead><tbody>' +
-      store.stickers.map(s => '<tr><td class="mono"><strong>'+esc(s.plate)+'</strong></td><td>'+esc(s.vehicle)+'</td>' +
-        '<td class="hide-sm mono">'+esc(s.unit)+'</td><td class="hide-sm mono">'+esc(s.tag)+'</td>' +
-        '<td><span class="tag '+statusTag(s.status)+'">'+esc(s.status)+'</span></td></tr>').join('') + '</tbody></table></div>') +
+      store.stickers.map(s => '<tr><td class="mono" data-label="Plate"><strong>'+esc(s.plate)+'</strong></td><td data-label="Vehicle">'+esc(s.vehicle)+'</td>' +
+        '<td class="hide-sm mono" data-label="Unit">'+esc(s.unit)+'</td><td class="hide-sm mono" data-label="Tag">'+esc(s.tag)+'</td>' +
+        '<td data-label="Status"><span class="tag '+statusTag(s.status)+'">'+esc(s.status)+'</span></td></tr>').join('') + '</tbody></table></div>') +
     '<div class="card card-pad" style="margin-top:14px"><div class="ttl">Expired or unlisted plates</div>' +
     '<div class="meta" style="display:block;margin-top:6px">Log the vehicle at the gate and call the admin office. Do not turn away a resident on a lapsed tag alone.</div></div>';
   },
@@ -2604,8 +2604,8 @@ const SECURITY = {
     return head('Duty roster','Who is on post and how to reach them.') +
     sectionCard('This cycle',
       '<div class="tablewrap"><table><thead><tr><th>Post</th><th>Guard</th><th>Shift</th><th class="hide-sm">Contact</th></tr></thead><tbody>' +
-      store.guards.map(g => '<tr><td>'+esc(g.post)+'</td><td><strong>'+esc(g.name)+'</strong></td><td>'+esc(g.shift)+'</td>' +
-        '<td class="hide-sm mono">'+esc(g.contact)+'</td></tr>').join('') + '</tbody></table></div>') +
+      store.guards.map(g => '<tr><td data-label="Post">'+esc(g.post)+'</td><td data-label="Guard"><strong>'+esc(g.name)+'</strong></td><td data-label="Shift">'+esc(g.shift)+'</td>' +
+        '<td class="hide-sm mono" data-label="Contact">'+esc(g.contact)+'</td></tr>').join('') + '</tbody></table></div>') +
     sectionCard('Emergency numbers','<div class="card-pad">' +
       '<div class="kv"><span>Admin office</span><b>0917 555 0100</b></div>' +
       '<div class="kv"><span>Barangay / police</span><b>911 · (049) 555 0199</b></div>' +
