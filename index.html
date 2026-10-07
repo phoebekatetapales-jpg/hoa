@@ -430,20 +430,11 @@ html[data-theme="dark"] .bubble.mine{color:#0E121C}
     <div class="auth-card">
       <p class="eyebrow">Homeowners Portal</p>
       <h2>Sign in</h2>
-      <p class="sub">Use a linked account, or your registered subdivision email.</p>
-      <button class="oauth" id="oGoogle">
-        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.4 5.4 2.5 13.2l7.8 6.1C12.2 13.3 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.4-4.6 7l7.6 5.9c4.4-4.1 6.7-10.1 6.7-17.4z"/><path fill="#FBBC05" d="M10.3 28.7a14.5 14.5 0 0 1 0-9.4l-7.8-6.1a24 24 0 0 0 0 21.6l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.8 2.3-8.3 2.3-6.4 0-11.8-3.8-13.7-9.8l-7.8 6.1C6.4 42.6 14.6 48 24 48z"/></svg>
-        Continue with Google
-      </button>
-      <button class="oauth" id="oFacebook">
-        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>
-        Continue with Facebook
-      </button>
-      <div class="divider">or use email</div>
-      <label class="fld"><span>Email</span><input class="input" id="email" type="email" value="r.delacruz@hoa-community.ph" autocomplete="username"></label>
+      <p class="sub">Use your registered subdivision email.</p>
+      <label class="fld"><span>Email</span><input class="input" id="email" type="email" value="" autocomplete="username"></label>
       <label class="fld"><span>Password</span>
         <div class="pwd-wrap">
-          <input class="input" id="pass" type="password" value="demo1234" autocomplete="current-password">
+          <input class="input" id="pass" type="password" value="" autocomplete="current-password">
           <button type="button" class="pwd-toggle" id="pwdToggle" onclick="togglePwdVis()" aria-label="Show password" title="Show password">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
@@ -451,14 +442,6 @@ html[data-theme="dark"] .bubble.mine{color:#0E121C}
       </label>
       <button class="btn btn-primary" id="signin">Sign in</button>
       <p id="authErr" class="hint hide" style="color:var(--rose);font-weight:600"></p>
-      <p class="eyebrow" style="margin-top:22px">Demo accounts</p>
-      <div class="chiprow">
-        <button class="chip" onclick="fillDemo('r.delacruz@hoa-community.ph')">Homeowner</button>
-        <button class="chip" onclick="fillDemo('t.santos@hoa-community.ph')">Renter</button>
-        <button class="chip" onclick="fillDemo('gate@hoa-community.ph')">Security</button>
-        <button class="chip" onclick="fillDemo('admin@hoa-community.ph')">Admin / Staff</button>
-        <button class="chip" onclick="fillDemo('l.manalo@hoa-community.ph')">Board</button>
-      </div>
       <details class="matrix" id="roleMatrix">
         <summary>Who sees what in this portal</summary>
         <div id="matrixBody"></div>
@@ -525,7 +508,7 @@ html[data-theme="dark"] .bubble.mine{color:#0E121C}
    STORE — one source of truth for both portals
 ============================================================ */
 const store = {
-  session:{ authed:false, method:'password', name:'Rina Dela Cruz', email:'r.delacruz@hoa-community.ph',
+  session:{ authed:false, method:'password', name:'Rina Dela Cruz', email:'rdelacruz.m4x9@hoa-community.ph',
             phone:'0917 555 0142', unit:'B-12', role:'homeowner' },
   view:'feed', tab:{}, seen:new Set(),
   theme: (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light',
@@ -539,23 +522,23 @@ const store = {
   lastSync:{ msg:'Portal ready. Waiting for activity.', at:new Date() },
 
   accounts:[
-    { id:'u0', name:'Arnel Bautista', email:'admin@hoa-community.ph', password:'demo1234', role:'admin',
+    { id:'u0', name:'Arnel Bautista', email:'abautista.k7q2@hoa-community.ph', password:'Hoa#Adm-7Kq2', role:'admin',
       unit:'Admin office', title:'President / Portal administrator', phone:'0917 555 0100', status:'Active', added:'2024-01-15', lastSeen:new Date(Date.now()-36e5*3) },
-    { id:'u1', name:'Rina Dela Cruz', email:'r.delacruz@hoa-community.ph', password:'demo1234', role:'homeowner',
+    { id:'u1', name:'Rina Dela Cruz', email:'rdelacruz.m4x9@hoa-community.ph', password:'Hoa#Own-4Mx9', role:'homeowner',
       unit:'B-12', title:'Owner of record', phone:'0917 555 0142', status:'Active', added:'2021-06-02', lastSeen:new Date(Date.now()-36e5*8) },
-    { id:'u2', name:'Marco Villanueva', email:'m.villanueva@hoa-community.ph', password:'demo1234', role:'homeowner',
+    { id:'u2', name:'Marco Villanueva', email:'mvillanueva.p3t8@hoa-community.ph', password:'Hoa#Own-3Pt8', role:'homeowner',
       unit:'A-04', title:'Owner of record', phone:'0917 555 0121', status:'Active', added:'2019-03-11', lastSeen:new Date(Date.now()-864e5*2) },
-    { id:'u3', name:'Jonna Reyes', email:'j.reyes@hoa-community.ph', password:'demo1234', role:'homeowner',
+    { id:'u3', name:'Jonna Reyes', email:'jreyes.w6n1@hoa-community.ph', password:'Hoa#Own-6Wn1', role:'homeowner',
       unit:'C-21', title:'Owner of record', phone:'0917 555 0166', status:'Active', added:'2018-09-24', lastSeen:new Date(Date.now()-864e5*5) },
-    { id:'u4', name:'Ferdie Lim', email:'f.lim@hoa-community.ph', password:'demo1234', role:'homeowner',
+    { id:'u4', name:'Ferdie Lim', email:'flim.z2r5@hoa-community.ph', password:'Hoa#Own-2Zr5', role:'homeowner',
       unit:'D-07', title:'Owner of record', phone:'0917 555 0188', status:'Active', added:'2016-02-08', lastSeen:new Date(Date.now()-864e5*1) },
-    { id:'u5', name:'Estrella Ocampo', email:'e.ocampo@hoa-community.ph', password:'', role:'homeowner',
+    { id:'u5', name:'Estrella Ocampo', email:'eocampo.h8d3@hoa-community.ph', password:'', role:'homeowner',
       unit:'D-15', title:'Owner of record', phone:'0908 555 0133', status:'Invited', added:'2026-08-19', lastSeen:null },
-    { id:'u6', name:'Teresa Santos', email:'t.santos@hoa-community.ph', password:'demo1234', role:'renter',
+    { id:'u6', name:'Teresa Santos', email:'tsantos.v5j7@hoa-community.ph', password:'Hoa#Ren-5Vj7', role:'renter',
       unit:'C-21', title:'Tenant of C-21', phone:'0917 555 0155', status:'Active', added:'2025-11-04', lastSeen:new Date(Date.now()-36e5*14) },
-    { id:'u7', name:'SG Onting', email:'gate@hoa-community.ph', password:'demo1234', role:'security',
+    { id:'u7', name:'SG Onting', email:'sgonting.b9c4@hoa-community.ph', password:'Hoa#Sec-9Bc4', role:'security',
       unit:'Main gate', title:'Guard on post', phone:'0917 555 0110', status:'Active', added:'2025-02-17', lastSeen:new Date(Date.now()-36e5*1) },
-    { id:'u8', name:'Liza Manalo', email:'l.manalo@hoa-community.ph', password:'demo1234', role:'board',
+    { id:'u8', name:'Liza Manalo', email:'lmanalo.q1y6@hoa-community.ph', password:'Hoa#Brd-1Qy6', role:'board',
       unit:'C-03', title:'Board of Trustees', phone:'0917 555 0177', status:'Active', added:'2024-09-13', lastSeen:new Date(Date.now()-864e5*1) }
   ],
   boardDocs:[
@@ -1012,10 +995,6 @@ function authErr(msg){
   if(!msg){ el.classList.add('hide'); return; }
   el.textContent = msg; el.classList.remove('hide');
 }
-function fillDemo(email){
-  const a = store.accounts.find(x=>x.email===email);
-  $('#email').value = a.email; $('#pass').value = 'demo1234'; authErr('');
-}
 function findAccount(email){
   return store.accounts.find(a => a.email.toLowerCase() === String(email).trim().toLowerCase());
 }
@@ -1028,21 +1007,6 @@ $('#signin').addEventListener('click', () => {
   if(pass !== acct.password){ authErr('That password does not match our records.'); return; }
   authErr(''); enter(acct, 'password');
 });
-function oauth(btn, provider, profile){
-  btn.disabled = true; const label = btn.innerHTML;
-  btn.innerHTML = 'Opening ' + provider + '…';
-  setTimeout(()=>{ btn.innerHTML='Verifying token…';
-    setTimeout(()=>{ btn.disabled=false; btn.innerHTML=label;
-      /* the linked social account resolves to one portal account and one role */
-      const acct = findAccount(profile.portalEmail);
-      if(!acct || acct.status!=='Active'){ authErr('That '+provider+' account is not linked to an active portal account.'); return; }
-      store.linked[provider.toLowerCase()] = true;
-      enter(acct, provider);
-    },700);
-  },650);
-}
-$('#oGoogle').addEventListener('click', e => oauth(e.currentTarget,'Google',{portalEmail:'r.delacruz@hoa-community.ph'}));
-$('#oFacebook').addEventListener('click', e => oauth(e.currentTarget,'Facebook',{portalEmail:'r.delacruz@hoa-community.ph'}));
 
 function enter(acct, method){
   acct.lastSeen = new Date();
