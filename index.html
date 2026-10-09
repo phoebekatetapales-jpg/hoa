@@ -581,6 +581,8 @@ const store = {
   },
   prefs:{ email:true, sms:true, push:false, digest:'Weekly', language:'English' },
   linked:{ google:true, facebook:false },
+  /* User Access — pages the admin has switched off, per role */
+  hiddenPages:{ homeowner:[], renter:[], security:[], board:[] },
 
   announcements:[
     { id:'a1', title:'Water interruption — Friday, Aug 28', date:'2026-08-24', category:'Advisory',
@@ -1058,7 +1060,8 @@ const NAV = {
       { id:'governance', label:'Governance & Community',  icon:'megaphone', badge:()=>store.complaints.filter(c=>c.status!=='Resolved').length },
       { id:'financial',  label:'Financial',               icon:'peso', badge:()=>
           store.dues.filter(d=>d.status!=='Paid').length + store.expenses.filter(x=>x.status==='For approval').length },
-      { id:'reports',    label:'Reports',                 icon:'chart' }
+      { id:'reports',    label:'Reports',                 icon:'chart' },
+      { id:'access',     label:'User Access',             icon:'lock' }
     ]},
     { g:'Account', items:[
       { id:'support',  label:'Support', icon:'life', badge:()=>store.tickets.filter(t=>t.status!=='Resolved').length },
@@ -1129,6 +1132,7 @@ const NAV = {
   ]
 };
 const ICONS = {
+  lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   grid:'<path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/>',
   megaphone:'<path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1zM15 8a5 5 0 0 1 0 8M18 5a9 9 0 0 1 0 14"/>',
   wrench:'<path d="M14.7 6.3a4 4 0 0 0 5 5L21 15l-6 6-3-3M9.5 9.5 4 15l3 3 5.5-5.5"/>',
@@ -1147,7 +1151,20 @@ const ICONS = {
 };
 const svg = k => '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">'+ICONS[k]+'</svg>';
 
-function go(view){ store.view=view; closeDrawer(); render(); window.scrollTo({top:0,behavior:'smooth'}); }
+/* ---- User Access: Support and Settings always stay on so nobody is locked out of their account ---- */
+const ACCESS_LOCKED = ['support','settings'];
+const ACCESS_ROLES = ['homeowner','renter','security','board'];
+function pageOn(role, id){
+  if(role === 'admin' || ACCESS_LOCKED.includes(id)) return true;
+  return !((store.hiddenPages[role] || []).includes(id));
+}
+function navFor(role){
+  return NAV[role].map(g => ({ g:g.g, items:g.items.filter(it => pageOn(role, it.id)) })).filter(g => g.items.length);
+}
+function go(view){
+  if(!pageOn(store.session.role, view)){ toast('info','Not available','The admin office has turned this page off for your account.'); return; }
+  store.view=view; closeDrawer(); render(); window.scrollTo({top:0,behavior:'smooth'});
+}
 function goTab(section, tab){ store.tab[section]=tab; render(); }
 function tabOf(section, dflt){ return store.tab[section] || dflt; }
 function tabs(section, items, dflt){
@@ -1178,7 +1195,9 @@ function render(){
   paintBell(); applyTheme(); paintMsgBtn(); paintAvail();
   const availWrap = $('#availWrap'); if(availWrap) availWrap.classList.toggle('hide', s.role !== 'admin');
 
-  $('#nav').innerHTML = NAV[s.role].map(group =>
+  const nav = navFor(s.role);
+  if(!pageOn(s.role, store.view) || !(VIEWS[s.role]||HOME)[store.view]) store.view = nav[0].items[0].id;
+  $('#nav').innerHTML = nav.map(group =>
     '<p class="navlabel">'+esc(group.g)+'</p>' + group.items.map(it => {
       const n = it.badge ? it.badge() : 0;
       return '<button class="navitem" '+(store.view===it.id?'aria-current="page"':'')+' onclick="go(\''+it.id+'\')">' +
@@ -1248,6 +1267,24 @@ function onGateSearch(v){
    ADMIN VIEWS
 ============================================================ */
 const ADMIN = {
+  access(){
+    const role = tabOf('access','homeowner');
+    const off = (store.hiddenPages[role]||[]).length;
+    const rows = NAV[role].map(g =>
+      '<p class="navlabel" style="margin:14px 0 2px">'+esc(g.g)+'</p>' +
+      g.items.map(it => {
+        const locked = ACCESS_LOCKED.includes(it.id), on = pageOn(role, it.id);
+        return '<div class="switch"><div><div class="sl">'+esc(it.label)+'</div><div class="sd">' +
+          (locked ? 'Always on — they need this to manage their account.' : on ? 'Visible to every '+esc(ROLE_LABEL(role).toLowerCase())+' account.' : 'Hidden. They will not see this page.') +
+          '</div></div>' +
+          '<button class="tgl" role="switch" aria-checked="'+on+'" aria-label="'+esc(it.label)+'"'+
+          (locked ? ' disabled style="opacity:.45;cursor:not-allowed"' : ' onclick="flipPage(\''+role+'\',\''+it.id+'\')"')+'><i></i></button></div>';
+      }).join('')).join('');
+    return head('User Access','Choose which pages each type of user can see. Turned-off pages disappear from their menu straight away.') +
+      tabs('access', ACCESS_ROLES.map(r => ({ id:r, label:ROLE_LABEL(r), n:(store.hiddenPages[r]||[]).length ? (store.hiddenPages[r].length+' off') : '' })), 'homeowner') +
+      sectionCard(ROLE_LABEL(role)+' pages', '<div class="card-pad">'+rows+'</div>',
+        off ? '<button class="btn btn-ghost btn-sm" onclick="resetAccess(\''+role+'\')">Turn all back on</button>' : '');
+  },
   overview(){
     const openReq = store.requests.filter(r=>r.status!=='Resolved').length;
     const pendingBk = store.bookings.filter(b=>b.status==='Pending').length;
@@ -3488,6 +3525,16 @@ function resolveTicket(id){ const t=store.tickets.find(x=>x.id===id); t.status='
   commit('Support ticket “'+t.subject+'” marked resolved.',{title:'Ticket resolved',forUnit:t.unit,chat:{kind:'ticket',id:t.id}}); }
 
 /* settings */
+function flipPage(role, id){
+  const list = store.hiddenPages[role] || (store.hiddenPages[role] = []);
+  const i = list.indexOf(id), item = NAV[role].flatMap(g=>g.items).find(x=>x.id===id);
+  if(i >= 0) list.splice(i,1); else list.push(id);
+  commit(item.label+' is now '+(i>=0?'visible':'hidden')+' for '+ROLE_LABEL(role)+' accounts.',{title:'User access updated',audience:'admin'});
+}
+function resetAccess(role){
+  store.hiddenPages[role] = [];
+  commit('Every page is visible again for '+ROLE_LABEL(role)+' accounts.',{title:'User access updated',audience:'admin'});
+}
 function flipSetting(key){ store.settings[key] = !store.settings[key];
   commit('Portal rule updated — '+key.replace(/([A-Z])/g,' $1').toLowerCase()+' is now '+(store.settings[key]?'on':'off')+'.',{title:'Setting saved'}); }
 function flipPref(key){ store.prefs[key] = !store.prefs[key];

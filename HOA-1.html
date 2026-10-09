@@ -54,6 +54,22 @@ a{color:var(--slate)}
 .dot{width:8px;height:8px;border-radius:50%;background:#5FE0A8;flex:none;box-shadow:0 0 0 0 rgba(95,224,168,.6);animation:ping 2.4s infinite}
 @keyframes ping{70%{box-shadow:0 0 0 9px rgba(95,224,168,0)}100%{box-shadow:0 0 0 0 rgba(95,224,168,0)}}
 .auth-foot{font-size:12.5px;color:#AEB6E6;margin-top:30px}
+.tutorial-row{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+.tutorial-btn{position:relative;overflow:hidden;isolation:isolate;display:flex;align-items:center;gap:9px;border:0;border-radius:12px;padding:12px 18px;font-size:13.5px;font-weight:700;letter-spacing:.2px;color:#fff;cursor:pointer;font-family:inherit;transition:transform .2s cubic-bezier(.2,.7,.3,1),box-shadow .2s,filter .2s;animation:tutRise .6s .36s cubic-bezier(.2,.7,.3,1) backwards,tutGlow 2.6s 1s ease-in-out infinite}
+#desktopTutorialBtn{background:linear-gradient(135deg,#FF8A3D 0%,#FF4F7B 100%);--glow:255,95,110}
+#mobileTutorialBtn{background:linear-gradient(135deg,#22D3A6 0%,#3B82F6 100%);--glow:45,190,200;animation-delay:.48s,2.3s}
+.tutorial-btn::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);transform:translateX(-120%);animation:tutShine 3.2s 1.2s ease-in-out infinite}
+#mobileTutorialBtn::before{animation-delay:2.8s}
+.tutorial-btn:hover{transform:translateY(-3px) scale(1.04);filter:brightness(1.08);box-shadow:0 10px 26px -6px rgba(var(--glow),.75)}
+.tutorial-btn:active{transform:translateY(0) scale(.98)}
+.tutorial-btn:focus-visible{outline:2.5px solid #fff;outline-offset:3px}
+.tutorial-btn svg{flex:none;animation:tutIcon 2.6s 1s ease-in-out infinite}
+.tutorial-btn:hover svg{animation-duration:.9s}
+@keyframes tutRise{from{opacity:0;transform:translateY(12px) scale(.96)}}
+@keyframes tutGlow{0%,100%{box-shadow:0 4px 14px -4px rgba(var(--glow),.55),0 0 0 0 rgba(var(--glow),.5)}50%{box-shadow:0 6px 20px -4px rgba(var(--glow),.75),0 0 0 7px rgba(var(--glow),0)}}
+@keyframes tutShine{0%{transform:translateX(-120%)}45%,100%{transform:translateX(120%)}}
+@keyframes tutIcon{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+@media(prefers-reduced-motion:reduce){.tutorial-btn,.tutorial-btn::before,.tutorial-btn svg{animation:none}.tutorial-btn:hover{transform:none}}
 .auth-panel{background:var(--surface);padding:34px 22px 46px;display:flex;align-items:center;justify-content:center}
 .auth-card{width:100%;max-width:392px}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
@@ -306,17 +322,17 @@ tr:last-child td{border-bottom:0}
 .tablewrap{overflow-x:auto}
 @media(max-width:640px){.hide-sm{display:none}}
 @media(max-width:640px){
-  table.stack-mobile thead{display:none}
-  table.stack-mobile, table.stack-mobile tbody, table.stack-mobile tr, table.stack-mobile td{display:block;width:100%}
-  table.stack-mobile{border:0}
-  table.stack-mobile tr{border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px}
-  table.stack-mobile tr:last-child{margin-bottom:0}
-  table.stack-mobile td{padding:7px 0;border-bottom:1px dashed var(--line)}
-  table.stack-mobile td:last-child{border-bottom:0;padding-top:11px}
-  table.stack-mobile td.hide-sm{display:block}
-  table.stack-mobile td[data-label]::before{content:attr(data-label);display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
-  table.stack-mobile td[style*="text-align:right"]{text-align:left}
-  table.stack-mobile .btn-row{justify-content:flex-start}
+  .tablewrap table thead{display:none}
+  .tablewrap table, .tablewrap table tbody, .tablewrap table tr, .tablewrap table td{display:block;width:100%}
+  .tablewrap table{border:0}
+  .tablewrap table tr{border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px}
+  .tablewrap table tr:last-child{margin-bottom:0}
+  .tablewrap table td{padding:7px 0;border-bottom:1px dashed var(--line)}
+  .tablewrap table td:last-child{border-bottom:0;padding-top:11px}
+  .tablewrap table td.hide-sm{display:block}
+  .tablewrap table td[data-label]::before{content:attr(data-label);display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+  .tablewrap table td[style*="text-align:right"]{text-align:left}
+  .tablewrap table .btn-row{justify-content:flex-start}
 }
 .progress{height:7px;background:var(--paper);border-radius:20px;overflow:hidden;border:1px solid var(--line)}
 .progress i{display:block;height:100%;background:var(--emerald);transition:width .5s cubic-bezier(.2,.7,.3,1)}
@@ -397,6 +413,16 @@ html[data-theme="dark"] .bubble.mine{color:#0E121C}
         <div class="pulse-row"><span class="dot"></span> Board posted “Water interruption — Aug 28”</div>
         <div class="pulse-row"><span class="dot"></span> Unit B-12 settled August dues · ₱1,850</div>
         <div class="pulse-row"><span class="dot"></span> Election for 2026–2028 board is open</div>
+      </div>
+      <div class="tutorial-row">
+        <button class="tutorial-btn" id="desktopTutorialBtn" type="button" onclick="openTutorial('desktop','Desktop')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M10 8.3v7.4l6.2-3.7z" fill="currentColor" stroke="none"/></svg>
+          Desktop Tutorial
+        </button>
+        <button class="tutorial-btn" id="mobileTutorialBtn" type="button" onclick="openTutorial('mobile','Mobile')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2.3"/><path d="M10.5 9.2v5.6l4.6-2.8z" fill="currentColor" stroke="none"/></svg>
+          Mobile Tutorial
+        </button>
       </div>
     </div>
     <p class="auth-foot">Prototype build · no real accounts are created and nothing leaves your browser.</p>
@@ -555,6 +581,8 @@ const store = {
   },
   prefs:{ email:true, sms:true, push:false, digest:'Weekly', language:'English' },
   linked:{ google:true, facebook:false },
+  /* User Access — pages the admin has switched off, per role */
+  hiddenPages:{ homeowner:[], renter:[], security:[], board:[] },
 
   announcements:[
     { id:'a1', title:'Water interruption — Friday, Aug 28', date:'2026-08-24', category:'Advisory',
@@ -715,10 +743,10 @@ const store = {
 
 const ROLE_MATRIX = [
   { role:'homeowner', label:'Homeowner',
-    exp:'Announcements, events, own unit and profile, reservations and published documents.',
+    exp:'Announcements, events, own unit and profile, reservations, visitor passes for the gate and published documents.',
     deny:'Other households, security logs, Board-only records.' },
   { role:'renter', label:'Renter',
-    exp:'Renter-visible notices, permitted amenities, own profile and approved community information.',
+    exp:'Renter-visible notices, permitted amenities, visitor passes for the gate, own profile and approved community information.',
     deny:'Owner financial ledger, Board-only records, other residents\u2019 data.' },
   { role:'security', label:'Security',
     exp:'Gate-related information and visitor pass validation when enabled.',
@@ -740,6 +768,13 @@ const MKT_CATEGORIES = ['Food & Beverage','Home & Living','Fashion & Accessories
 /* ============================================================
    HELPERS
 ============================================================ */
+// Paste tutorial video URLs here once recorded — leave as '' to keep the "coming soon" toast.
+const TUTORIAL_URLS = { desktop:'', mobile:'https://youtube.com/shorts/54XtRSx3YME?feature=share' };
+function openTutorial(key, label){
+  const url = TUTORIAL_URLS[key];
+  if(url) window.open(url, '_blank', 'noopener');
+  else toast('info', label + ' tutorial', 'Coming soon');
+}
 const $ = s => document.querySelector(s);
 const uid = () => Math.random().toString(36).slice(2,9);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1025,7 +1060,8 @@ const NAV = {
       { id:'governance', label:'Governance & Community',  icon:'megaphone', badge:()=>store.complaints.filter(c=>c.status!=='Resolved').length },
       { id:'financial',  label:'Financial',               icon:'peso', badge:()=>
           store.dues.filter(d=>d.status!=='Paid').length + store.expenses.filter(x=>x.status==='For approval').length },
-      { id:'reports',    label:'Reports',                 icon:'chart' }
+      { id:'reports',    label:'Reports',                 icon:'chart' },
+      { id:'access',     label:'User Access',             icon:'lock' }
     ]},
     { g:'Account', items:[
       { id:'support',  label:'Support', icon:'life', badge:()=>store.tickets.filter(t=>t.status!=='Resolved').length },
@@ -1037,6 +1073,7 @@ const NAV = {
       { id:'feed',       label:'Notices',        icon:'megaphone', badge:()=>visibleAnnouncements().filter(a=>!store.seen.has(a.id)).length },
       { id:'events',     label:'Events & amenities', icon:'calendar' },
       { id:'myrequests', label:'My requests',    icon:'wrench' },
+      { id:'visitors',   label:'Visitor pass',   icon:'shield', badge:()=>store.passes.filter(p=>p.unit===myUnit()&&p.status==='Pending').length },
       { id:'concerns',   label:'Concerns',       icon:'chat' }
     ]},
     { g:'Account', items:[
@@ -1080,6 +1117,7 @@ const NAV = {
       { id:'myrequests', label:'My requests',    icon:'wrench' },
       { id:'events',     label:'Events',         icon:'calendar' },
       { id:'book',       label:'Book a facility',icon:'grid' },
+      { id:'visitors',   label:'Visitor pass',   icon:'shield', badge:()=>store.passes.filter(p=>p.unit===myUnit()&&p.status==='Pending').length },
       { id:'marketplace',label:'Marketplace',    icon:'tag' }
     ]},
     { g:'Raise it with the board', items:[
@@ -1094,6 +1132,7 @@ const NAV = {
   ]
 };
 const ICONS = {
+  lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   grid:'<path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/>',
   megaphone:'<path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1zM15 8a5 5 0 0 1 0 8M18 5a9 9 0 0 1 0 14"/>',
   wrench:'<path d="M14.7 6.3a4 4 0 0 0 5 5L21 15l-6 6-3-3M9.5 9.5 4 15l3 3 5.5-5.5"/>',
@@ -1112,7 +1151,20 @@ const ICONS = {
 };
 const svg = k => '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">'+ICONS[k]+'</svg>';
 
-function go(view){ store.view=view; closeDrawer(); render(); window.scrollTo({top:0,behavior:'smooth'}); }
+/* ---- User Access: Support and Settings always stay on so nobody is locked out of their account ---- */
+const ACCESS_LOCKED = ['support','settings'];
+const ACCESS_ROLES = ['homeowner','renter','security','board'];
+function pageOn(role, id){
+  if(role === 'admin' || ACCESS_LOCKED.includes(id)) return true;
+  return !((store.hiddenPages[role] || []).includes(id));
+}
+function navFor(role){
+  return NAV[role].map(g => ({ g:g.g, items:g.items.filter(it => pageOn(role, it.id)) })).filter(g => g.items.length);
+}
+function go(view){
+  if(!pageOn(store.session.role, view)){ toast('info','Not available','The admin office has turned this page off for your account.'); return; }
+  store.view=view; closeDrawer(); render(); window.scrollTo({top:0,behavior:'smooth'});
+}
 function goTab(section, tab){ store.tab[section]=tab; render(); }
 function tabOf(section, dflt){ return store.tab[section] || dflt; }
 function tabs(section, items, dflt){
@@ -1143,7 +1195,9 @@ function render(){
   paintBell(); applyTheme(); paintMsgBtn(); paintAvail();
   const availWrap = $('#availWrap'); if(availWrap) availWrap.classList.toggle('hide', s.role !== 'admin');
 
-  $('#nav').innerHTML = NAV[s.role].map(group =>
+  const nav = navFor(s.role);
+  if(!pageOn(s.role, store.view) || !(VIEWS[s.role]||HOME)[store.view]) store.view = nav[0].items[0].id;
+  $('#nav').innerHTML = nav.map(group =>
     '<p class="navlabel">'+esc(group.g)+'</p>' + group.items.map(it => {
       const n = it.badge ? it.badge() : 0;
       return '<button class="navitem" '+(store.view===it.id?'aria-current="page"':'')+' onclick="go(\''+it.id+'\')">' +
@@ -1199,10 +1253,38 @@ function onProfileSearch(v){
   if(el){ el.focus(); if(pos!=null) el.setSelectionRange(pos,pos); }
 }
 
+let gateFilter = '';
+function onGateSearch(v){
+  gateFilter = v;
+  const active = document.activeElement;
+  const pos = active && active.id==='gateSearchInput' ? active.selectionStart : null;
+  render();
+  const el = $('#gateSearchInput');
+  if(el){ el.focus(); if(pos!=null) el.setSelectionRange(pos,pos); }
+}
+
 /* ============================================================
    ADMIN VIEWS
 ============================================================ */
 const ADMIN = {
+  access(){
+    const role = tabOf('access','homeowner');
+    const off = (store.hiddenPages[role]||[]).length;
+    const rows = NAV[role].map(g =>
+      '<p class="navlabel" style="margin:14px 0 2px">'+esc(g.g)+'</p>' +
+      g.items.map(it => {
+        const locked = ACCESS_LOCKED.includes(it.id), on = pageOn(role, it.id);
+        return '<div class="switch"><div><div class="sl">'+esc(it.label)+'</div><div class="sd">' +
+          (locked ? 'Always on — they need this to manage their account.' : on ? 'Visible to every '+esc(ROLE_LABEL(role).toLowerCase())+' account.' : 'Hidden. They will not see this page.') +
+          '</div></div>' +
+          '<button class="tgl" role="switch" aria-checked="'+on+'" aria-label="'+esc(it.label)+'"'+
+          (locked ? ' disabled style="opacity:.45;cursor:not-allowed"' : ' onclick="flipPage(\''+role+'\',\''+it.id+'\')"')+'><i></i></button></div>';
+      }).join('')).join('');
+    return head('User Access','Choose which pages each type of user can see. Turned-off pages disappear from their menu straight away.') +
+      tabs('access', ACCESS_ROLES.map(r => ({ id:r, label:ROLE_LABEL(r), n:(store.hiddenPages[r]||[]).length ? (store.hiddenPages[r].length+' off') : '' })), 'homeowner') +
+      sectionCard(ROLE_LABEL(role)+' pages', '<div class="card-pad">'+rows+'</div>',
+        off ? '<button class="btn btn-ghost btn-sm" onclick="resetAccess(\''+role+'\')">Turn all back on</button>' : '');
+  },
   overview(){
     const openReq = store.requests.filter(r=>r.status!=='Resolved').length;
     const pendingBk = store.bookings.filter(b=>b.status==='Pending').length;
@@ -1367,11 +1449,11 @@ const ADMIN = {
         sectionCard('Unit registry',
           '<div class="tablewrap"><table><thead><tr><th>Unit</th><th>Owner of record</th><th class="hide-sm">Phase</th>' +
           '<th class="hide-sm">Lot (sqm)</th><th>Monthly dues</th><th>Occupancy</th></tr></thead><tbody>' +
-          store.units.map(u => '<tr><td class="mono"><strong>'+esc(u.unit)+'</strong></td>' +
-            '<td>'+esc(u.owner)+'<div class="meta">'+esc(u.type)+' · since '+esc(u.since)+'</div></td>' +
-            '<td class="hide-sm">'+esc(u.phase)+'</td><td class="hide-sm mono">'+u.lot+'</td>' +
-            '<td class="mono">'+peso(unitDues(u))+'</td>' +
-            '<td><span class="tag '+(u.occupancy==='Vacant'?'t-grey':u.occupancy==='Leased'?'t-amber':'t-emerald')+'">'+esc(u.occupancy)+'</span></td></tr>').join('') +
+          store.units.map(u => '<tr><td class="mono" data-label="Unit"><strong>'+esc(u.unit)+'</strong></td>' +
+            '<td data-label="Owner of record">'+esc(u.owner)+'<div class="meta">'+esc(u.type)+' · since '+esc(u.since)+'</div></td>' +
+            '<td class="hide-sm" data-label="Phase">'+esc(u.phase)+'</td><td class="hide-sm mono" data-label="Lot (sqm)">'+u.lot+'</td>' +
+            '<td class="mono" data-label="Monthly dues">'+peso(unitDues(u))+'</td>' +
+            '<td data-label="Occupancy"><span class="tag '+(u.occupancy==='Vacant'?'t-grey':u.occupancy==='Leased'?'t-amber':'t-emerald')+'">'+esc(u.occupancy)+'</span></td></tr>').join('') +
           '</tbody></table></div>',
           '<button class="btn btn-ghost btn-sm" onclick="unitForm()">Add unit</button>');
       },
@@ -1419,8 +1501,8 @@ const ADMIN = {
         ];
         return sectionCard('Preventive maintenance',
           '<div class="tablewrap"><table><thead><tr><th>Task</th><th class="hide-sm">Frequency</th><th>Next due</th><th class="hide-sm">Owner</th></tr></thead><tbody>' +
-          pm.map(p => '<tr><td><strong>'+esc(p.task)+'</strong></td><td class="hide-sm">'+esc(p.freq)+'</td>' +
-            '<td>'+fmtDate(p.next)+'</td><td class="hide-sm">'+esc(p.owner)+'</td></tr>').join('') + '</tbody></table></div>');
+          pm.map(p => '<tr><td data-label="Task"><strong>'+esc(p.task)+'</strong></td><td class="hide-sm" data-label="Frequency">'+esc(p.freq)+'</td>' +
+            '<td data-label="Next due">'+fmtDate(p.next)+'</td><td class="hide-sm" data-label="Owner">'+esc(p.owner)+'</td></tr>').join('') + '</tbody></table></div>');
       }
     }[t]();
     return head('Operations & Maintenance','Tickets from homeowners, facility use and the standing maintenance calendar.') +
@@ -1451,12 +1533,12 @@ const ADMIN = {
       listings(){
         return sectionCard('All listings', store.marketplace.length
           ? '<div class="tablewrap"><table class="mkt-listings"><thead><tr><th>Listing</th><th class="hide-sm">Seller</th><th>Price</th><th>Status</th><th class="hide-sm">Decided</th><th></th></tr></thead><tbody>' +
-          store.marketplace.map(m => '<tr><td><strong>'+esc(m.title)+'</strong><div class="meta">'+esc(m.category)+'</div></td>' +
-            '<td class="hide-sm">'+esc(m.by)+'<div class="meta mono">'+esc(m.unit)+'</div></td>' +
-            '<td class="mono">'+peso(m.price)+'</td>' +
-            '<td><span class="tag '+statusTag(m.status)+'">'+esc(m.status)+'</span>' +
+          store.marketplace.map(m => '<tr><td data-label="Listing"><strong>'+esc(m.title)+'</strong><div class="meta">'+esc(m.category)+'</div></td>' +
+            '<td class="hide-sm" data-label="Seller">'+esc(m.by)+'<div class="meta mono">'+esc(m.unit)+'</div></td>' +
+            '<td class="mono" data-label="Price">'+peso(m.price)+'</td>' +
+            '<td data-label="Status"><span class="tag '+statusTag(m.status)+'">'+esc(m.status)+'</span>' +
               (m.status==='Rejected'&&m.rejectReason?'<div class="meta">'+esc(m.rejectReason)+'</div>':'')+'</td>' +
-            '<td class="hide-sm meta">'+(m.decidedAt?fmtDate(m.decidedAt)+' · '+esc(m.decidedBy):'—')+'</td>' +
+            '<td class="hide-sm meta" data-label="Decided">'+(m.decidedAt?fmtDate(m.decidedAt)+' · '+esc(m.decidedBy):'—')+'</td>' +
             '<td style="text-align:right"><button class="btn btn-danger btn-sm" onclick="deleteMktForm(\''+m.id+'\')">Remove</button></td></tr>').join('') +
           '</tbody></table></div>'
           : empty('No listings yet','Submissions from homeowners will show up here.'));
@@ -1485,9 +1567,9 @@ const ADMIN = {
       passes(){
         return sectionCard('Visitor passes',
           '<div class="tablewrap"><table><thead><tr><th>Visitor</th><th class="hide-sm">Unit</th><th>Date</th><th>Code</th><th>Status</th><th></th></tr></thead><tbody>' +
-          store.passes.map(p => '<tr><td><strong>'+esc(p.visitor)+'</strong><div class="meta">'+esc(p.purpose)+(p.plate!=='—'?' · '+esc(p.plate):'')+'</div></td>' +
-            '<td class="hide-sm mono">'+esc(p.unit)+'</td><td>'+fmtDate(p.date)+'</td><td class="mono">'+esc(p.code)+'</td>' +
-            '<td><span class="tag '+statusTag(p.status)+'">'+esc(p.status)+'</span></td>' +
+          store.passes.map(p => '<tr><td data-label="Visitor"><strong>'+esc(p.visitor)+'</strong><div class="meta">'+esc(p.purpose)+(p.plate!=='—'?' · '+esc(p.plate):'')+'</div></td>' +
+            '<td class="hide-sm mono" data-label="Unit">'+esc(p.unit)+'</td><td data-label="Date">'+fmtDate(p.date)+'</td><td class="mono" data-label="Code">'+esc(p.code)+'</td>' +
+            '<td data-label="Status"><span class="tag '+statusTag(p.status)+'">'+esc(p.status)+'</span></td>' +
             '<td style="text-align:right">'+(p.status==='Pending'
               ? '<div class="btn-row" style="justify-content:flex-end"><button class="btn btn-emerald btn-sm" onclick="setPass(\''+p.id+'\',\'Active\')">Approve</button>' +
                 '<button class="btn btn-danger btn-sm" onclick="setPass(\''+p.id+'\',\'Revoked\')">Deny</button></div>'
@@ -1496,9 +1578,9 @@ const ADMIN = {
       stickers(){
         return sectionCard('Vehicle stickers and RFID',
           '<div class="tablewrap"><table><thead><tr><th>Plate</th><th>Vehicle</th><th class="hide-sm">Unit</th><th class="hide-sm">Tag</th><th>Expires</th><th>Status</th></tr></thead><tbody>' +
-          store.stickers.map(s => '<tr><td class="mono"><strong>'+esc(s.plate)+'</strong></td><td>'+esc(s.vehicle)+'</td>' +
-            '<td class="hide-sm mono">'+esc(s.unit)+'</td><td class="hide-sm mono">'+esc(s.tag)+'</td>' +
-            '<td>'+fmtDate(s.expires)+'</td><td><span class="tag '+statusTag(s.status)+'">'+esc(s.status)+'</span></td></tr>').join('') +
+          store.stickers.map(s => '<tr><td class="mono" data-label="Plate"><strong>'+esc(s.plate)+'</strong></td><td data-label="Vehicle">'+esc(s.vehicle)+'</td>' +
+            '<td class="hide-sm mono" data-label="Unit">'+esc(s.unit)+'</td><td class="hide-sm mono" data-label="Tag">'+esc(s.tag)+'</td>' +
+            '<td data-label="Expires">'+fmtDate(s.expires)+'</td><td data-label="Status"><span class="tag '+statusTag(s.status)+'">'+esc(s.status)+'</span></td></tr>').join('') +
           '</tbody></table></div>',
           '<button class="btn btn-ghost btn-sm" onclick="stickerForm()">Issue sticker</button>');
       },
@@ -1514,8 +1596,8 @@ const ADMIN = {
       guards(){
         return sectionCard('Guard roster',
           '<div class="tablewrap"><table><thead><tr><th>Post</th><th>Guard on duty</th><th>Shift</th><th class="hide-sm">Contact</th></tr></thead><tbody>' +
-          store.guards.map(g => '<tr><td>'+esc(g.post)+'</td><td><strong>'+esc(g.name)+'</strong></td><td>'+esc(g.shift)+'</td>' +
-            '<td class="hide-sm mono">'+esc(g.contact)+'</td></tr>').join('') + '</tbody></table></div>');
+          store.guards.map(g => '<tr><td data-label="Post">'+esc(g.post)+'</td><td data-label="Guard on duty"><strong>'+esc(g.name)+'</strong></td><td data-label="Shift">'+esc(g.shift)+'</td>' +
+            '<td class="hide-sm mono" data-label="Contact">'+esc(g.contact)+'</td></tr>').join('') + '</tbody></table></div>');
       }
     }[t]();
     return head('Security & Access Control','Gate passes, vehicle tags, the incident log and who is on post.') +
@@ -1646,7 +1728,7 @@ const ADMIN = {
             : 'Every household is billed the exact same flat amount regardless of lot size.') + '</p></div>',
           '<button class="btn btn-ghost btn-sm" onclick="billingRun()">Generate next billing</button>') +
         sectionCard('What each household would be billed', '<div class="tablewrap"><table><thead><tr><th>Unit</th><th class="hide-sm">Lot (sqm)</th><th>Monthly dues</th></tr></thead><tbody>' +
-          store.units.map(u => '<tr><td class="mono"><strong>'+esc(u.unit)+'</strong></td><td class="hide-sm mono">'+u.lot+'</td><td class="mono">'+peso(unitDues(u))+'</td></tr>').join('') +
+          store.units.map(u => '<tr><td class="mono" data-label="Unit"><strong>'+esc(u.unit)+'</strong></td><td class="hide-sm mono" data-label="Lot (sqm)">'+u.lot+'</td><td class="mono" data-label="Monthly dues">'+peso(unitDues(u))+'</td></tr>').join('') +
           '</tbody></table></div>') +
         sectionCard('Recently generated', store.reportLog.filter(r=>r.key==='collect').length ? '<ul class="list">' +
           store.reportLog.filter(r=>r.key==='collect').map(r =>
@@ -1657,15 +1739,15 @@ const ADMIN = {
       collections(){
         return sectionCard('Collections by phase',
           '<div class="tablewrap"><table><thead><tr><th>Phase</th><th class="hide-sm">Units</th><th>Collected</th><th class="hide-sm">Billed</th><th>Rate</th></tr></thead><tbody>' +
-          phaseCollections().map(p => '<tr><td><strong>'+esc(p.phase)+'</strong></td><td class="hide-sm mono">'+p.units+'</td>' +
-            '<td class="mono">'+peso(p.collected)+'</td><td class="hide-sm mono">'+peso(p.billed)+'</td>' +
-            '<td><div class="row" style="align-items:center;gap:8px"><div class="progress" style="width:70px"><i style="width:'+p.pct+'%"></i></div><span class="mono" style="font-size:12.5px">'+p.pct+'%</span></div></td></tr>').join('') +
+          phaseCollections().map(p => '<tr><td data-label="Phase"><strong>'+esc(p.phase)+'</strong></td><td class="hide-sm mono" data-label="Units">'+p.units+'</td>' +
+            '<td class="mono" data-label="Collected">'+peso(p.collected)+'</td><td class="hide-sm mono" data-label="Billed">'+peso(p.billed)+'</td>' +
+            '<td data-label="Rate"><div class="row" style="align-items:center;gap:8px"><div class="progress" style="width:70px"><i style="width:'+p.pct+'%"></i></div><span class="mono" style="font-size:12.5px">'+p.pct+'%</span></div></td></tr>').join('') +
           '</tbody></table></div>') +
         sectionCard('Dues ledger',
           '<div class="tablewrap"><table><thead><tr><th>Household</th><th class="hide-sm">Period</th><th>Amount</th><th class="hide-sm">Method</th><th>Status</th><th></th></tr></thead><tbody>' +
-          store.dues.map(d => '<tr><td><button class="btn-ghost" style="border:0;background:none;padding:0;cursor:pointer;text-align:left;font:inherit;color:var(--slate)" onclick="homeownerProfile(\''+d.unit+'\')"><strong>'+esc(d.owner)+'</strong></button><div class="meta mono">'+esc(d.unit)+'</div></td>' +
-            '<td class="hide-sm">'+esc(d.period)+'</td><td class="mono">'+peso(d.amount)+'</td>' +
-            '<td class="hide-sm">'+esc(d.method||'—')+'</td><td><span class="tag '+statusTag(d.status)+'">'+esc(d.status)+'</span></td>' +
+          store.dues.map(d => '<tr><td data-label="Household"><button class="btn-ghost" style="border:0;background:none;padding:0;cursor:pointer;text-align:left;font:inherit;color:var(--slate)" onclick="homeownerProfile(\''+d.unit+'\')"><strong>'+esc(d.owner)+'</strong></button><div class="meta mono">'+esc(d.unit)+'</div></td>' +
+            '<td class="hide-sm" data-label="Period">'+esc(d.period)+'</td><td class="mono" data-label="Amount">'+peso(d.amount)+'</td>' +
+            '<td class="hide-sm" data-label="Method">'+esc(d.method||'—')+'</td><td data-label="Status"><span class="tag '+statusTag(d.status)+'">'+esc(d.status)+'</span></td>' +
             '<td style="text-align:right">'+(d.status==='Paid'
               ? '<span class="meta">'+fmtDate(d.paidAt)+'</span>'
               : '<div class="btn-row" style="justify-content:flex-end"><button class="btn btn-ghost btn-sm" onclick="markPaid(\''+d.id+'\',\'Office cash\')">Record payment</button>' +
@@ -1685,10 +1767,10 @@ const ADMIN = {
       disbursement(){
         return sectionCard('Disbursements',
           '<div class="tablewrap"><table><thead><tr><th>Date</th><th>Payee</th><th class="hide-sm">Category</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>' +
-          store.expenses.map(x => '<tr><td class="meta">'+fmtDate(x.date)+'</td>' +
-            '<td><strong>'+esc(x.payee)+'</strong><div class="meta">'+esc(x.memo)+'</div></td>' +
-            '<td class="hide-sm">'+esc(x.category)+'</td><td class="mono">'+peso(x.amount)+'</td>' +
-            '<td><span class="tag '+statusTag(x.status)+'">'+esc(x.status)+'</span></td>' +
+          store.expenses.map(x => '<tr><td class="meta" data-label="Date">'+fmtDate(x.date)+'</td>' +
+            '<td data-label="Payee"><strong>'+esc(x.payee)+'</strong><div class="meta">'+esc(x.memo)+'</div></td>' +
+            '<td class="hide-sm" data-label="Category">'+esc(x.category)+'</td><td class="mono" data-label="Amount">'+peso(x.amount)+'</td>' +
+            '<td data-label="Status"><span class="tag '+statusTag(x.status)+'">'+esc(x.status)+'</span></td>' +
             '<td style="text-align:right">'+(x.status==='For approval'
               ? '<button class="btn btn-emerald btn-sm" onclick="approveExpense(\''+x.id+'\')">Approve</button>'
               : '<span class="meta">Cleared</span>')+'</td></tr>').join('') +
@@ -1787,11 +1869,11 @@ function prefToggle(label, desc, key){
 function bookingTable(list, actions){
   if(!list.length) return empty('No bookings','Homeowners can reserve the hall, court or pool from their portal.');
   return '<div class="tablewrap"><table><thead><tr><th>Facility</th><th>When</th><th class="hide-sm">Requested by</th><th>Status</th>'+(actions?'<th></th>':'')+'</tr></thead><tbody>' +
-    list.map(b => '<tr><td><strong>'+esc(b.facility)+'</strong><div class="meta">'+esc(b.purpose)+'</div></td>' +
-      '<td>'+fmtDate(b.date)+'<div class="meta">'+esc(b.slot)+'</div></td>' +
-      '<td class="hide-sm">'+esc(b.by)+'<div class="meta mono">'+esc(b.unit)+'</div>'+
+    list.map(b => '<tr><td data-label="Facility"><strong>'+esc(b.facility)+'</strong><div class="meta">'+esc(b.purpose)+'</div></td>' +
+      '<td data-label="When">'+fmtDate(b.date)+'<div class="meta">'+esc(b.slot)+'</div></td>' +
+      '<td class="hide-sm" data-label="Requested by">'+esc(b.by)+'<div class="meta mono">'+esc(b.unit)+'</div>'+
         (b.bookedByStaff?'<div class="meta">Added by '+esc(b.bookedByStaff)+'</div>':'')+'</td>' +
-      '<td><span class="tag '+statusTag(b.status)+'">'+esc(b.status)+'</span></td>' +
+      '<td data-label="Status"><span class="tag '+statusTag(b.status)+'">'+esc(b.status)+'</span></td>' +
       (actions ? '<td style="text-align:right">'+(b.status==='Pending'
         ? '<div class="btn-row" style="justify-content:flex-end"><button class="btn btn-emerald btn-sm" onclick="setBooking(\''+b.id+'\',\'Approved\')">Approve</button>' +
           '<button class="btn btn-danger btn-sm" onclick="setBooking(\''+b.id+'\',\'Declined\')">Decline</button></div>'
@@ -2207,9 +2289,9 @@ const HOME = {
     return head('My dues','Unit '+myUnit()+' · '+peso(unitDues(myUnit()))+' a month'+(store.settings.duesMode==='sqm' ? ' ('+peso(store.settings.duesRatePerSqm)+'/sqm)' : ' (flat rate)')+', due on the '+store.settings.dueDay+'th',
       open ? '<button class="btn btn-emerald" style="width:auto" onclick="payForm()">Pay '+esc(open.period)+'</button>' : '') +
     '<div class="card tablewrap"><table><thead><tr><th>Period</th><th>Amount</th><th class="hide-sm">Method</th><th>Status</th><th style="text-align:right">Paid on</th></tr></thead><tbody>' +
-    mine.map(d => '<tr><td><strong>'+esc(d.period)+'</strong></td><td class="mono">'+peso(d.amount)+'</td>' +
-      '<td class="hide-sm">'+esc(d.method||'—')+'</td><td><span class="tag '+statusTag(d.status)+'">'+esc(d.status)+'</span></td>' +
-      '<td style="text-align:right" class="meta">'+(d.paidAt?fmtDate(d.paidAt):'—')+'</td></tr>').join('') + '</tbody></table></div>';
+    mine.map(d => '<tr><td data-label="Period"><strong>'+esc(d.period)+'</strong></td><td class="mono" data-label="Amount">'+peso(d.amount)+'</td>' +
+      '<td class="hide-sm" data-label="Method">'+esc(d.method||'—')+'</td><td data-label="Status"><span class="tag '+statusTag(d.status)+'">'+esc(d.status)+'</span></td>' +
+      '<td style="text-align:right" class="meta" data-label="Paid on">'+(d.paidAt?fmtDate(d.paidAt):'—')+'</td></tr>').join('') + '</tbody></table></div>';
   },
 
   myrequests(){
@@ -2249,6 +2331,18 @@ const HOME = {
       '<button class="card card-pad" style="text-align:left;cursor:pointer" onclick="bookForm(\''+esc(f)+'\')">' +
       '<div class="qi">'+svg('calendar')+'</div><div class="ttl">'+esc(f)+'</div><div class="meta">Tap to reserve</div></button>').join('') + '</div>' +
     sectionCard('My bookings', mine.length ? bookingTable(mine) : empty('Nothing reserved','Pick a facility above to send a request to the board.'));
+  },
+
+  /* ---------- VISITOR PASSES ---------- */
+  visitors(){
+    const mine = store.passes.filter(p=>p.unit===myUnit()).slice().sort((a,b)=>a.date<b.date?1:-1);
+    return head('Visitor pass','Log a visitor before they arrive so the guardhouse knows to expect them. New passes need a quick approval before the code goes active.',
+      '<button class="btn btn-primary" style="width:auto" onclick="visitorForm()">Log a visitor</button>') +
+    (mine.length ? '<div class="card tablewrap"><table><thead><tr><th>Visitor</th><th class="hide-sm">Purpose</th><th>Date</th><th>Code</th><th>Status</th></tr></thead><tbody>' +
+      mine.map(p => '<tr><td data-label="Visitor"><strong>'+esc(p.visitor)+'</strong>'+(p.plate!=='—'?'<div class="meta mono">'+esc(p.plate)+'</div>':'')+'</td>' +
+        '<td class="hide-sm" data-label="Purpose">'+esc(p.purpose)+'</td><td data-label="Date">'+fmtDate(p.date)+'</td><td class="mono" data-label="Code">'+esc(p.code)+'</td>' +
+        '<td data-label="Status"><span class="tag '+statusTag(p.status)+'">'+esc(p.status)+'</span></td></tr>').join('') + '</tbody></table></div>'
+      : '<div class="card">'+empty('No visitor passes yet','Log a visitor, delivery or contractor and the admin office will clear them for the gate.')+'</div>');
   },
 
   /* ---------- MARKETPLACE ---------- */
@@ -2419,7 +2513,7 @@ function visibleAnnouncements(){
 function matrixTable(){
   return '<div class="tablewrap"><table class="mtable"><thead><tr>' +
     '<th>User role</th><th>Primary experience</th><th>Examples of restricted information</th></tr></thead><tbody>' +
-    ROLE_MATRIX.map(m => '<tr><td>'+esc(m.label)+'</td><td>'+esc(m.exp)+'</td><td>'+esc(m.deny)+'</td></tr>').join('') +
+    ROLE_MATRIX.map(m => '<tr><td data-label="User role">'+esc(m.label)+'</td><td data-label="Primary experience">'+esc(m.exp)+'</td><td data-label="Examples of restricted information">'+esc(m.deny)+'</td></tr>').join('') +
     '</tbody></table></div>';
 }
 function matrixStack(){
@@ -2465,6 +2559,7 @@ const RENTER = {
       tabs('cal',[{id:'calendar',label:'Calendar'},{id:'list',label:'What you may use'}],'calendar') + body;
   },
   myrequests(){ return HOME.myrequests(); },
+  visitors(){ return HOME.visitors(); },
   concerns(){
     const mine = store.concerns.filter(c=>c.unit===myUnit() && c.by===store.session.name);
     return head('Concerns','Questions and feedback for the board. Complaints against a household must be filed by the owner of record.',
@@ -2485,6 +2580,9 @@ const RENTER = {
 const SECURITY = {
   gate(){
     const active = store.passes.filter(p=>p.status==='Active');
+    const term = gateFilter.trim().toLowerCase();
+    const filtered = store.passes.filter(p => !term ||
+      p.code.toLowerCase().includes(term) || p.visitor.toLowerCase().includes(term));
     return head('Pass validation','Check a code at the gate, then mark it used. Resident billing and board records are not available on this account.',
       '<button class="btn btn-primary" style="width:auto" onclick="validateForm()">Validate a code</button>') +
     '<div class="grid g-4" style="margin-bottom:14px">' +
@@ -2493,24 +2591,28 @@ const SECURITY = {
       stat('Pending', store.passes.filter(p=>p.status==='Pending').length, 'Not yet approved') +
       stat('On post', store.guards.length, 'Guards this cycle') +
     '</div>' +
-    sectionCard('Expected visitors',
+    '<div class="fld" style="max-width:360px">' +
+      '<input class="input" id="gateSearchInput" type="text" placeholder="Search by code or visitor name…" value="'+esc(gateFilter)+'" oninput="onGateSearch(this.value)">' +
+    '</div>' +
+    sectionCard('Expected visitors', filtered.length ?
       '<div class="tablewrap"><table><thead><tr><th>Code</th><th>Visitor</th><th class="hide-sm">Unit</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>' +
-      store.passes.map(p => '<tr><td class="mono"><strong>'+esc(p.code)+'</strong></td>' +
-        '<td>'+esc(p.visitor)+'<div class="meta">'+esc(p.plate)+'</div></td>' +
-        '<td class="hide-sm mono">'+esc(p.unit)+'</td><td>'+fmtDate(p.date)+'</td>' +
-        '<td><span class="tag '+statusTag(p.status)+'">'+esc(p.status)+'</span></td>' +
+      filtered.map(p => '<tr><td class="mono" data-label="Code"><strong>'+esc(p.code)+'</strong></td>' +
+        '<td data-label="Visitor">'+esc(p.visitor)+'<div class="meta">'+esc(p.plate)+'</div></td>' +
+        '<td class="hide-sm mono" data-label="Unit">'+esc(p.unit)+'</td><td data-label="Date">'+fmtDate(p.date)+'</td>' +
+        '<td data-label="Status"><span class="tag '+statusTag(p.status)+'">'+esc(p.status)+'</span></td>' +
         '<td style="text-align:right">'+(p.status==='Active'
           ? '<button class="btn btn-emerald btn-sm" onclick="setPass(\''+p.id+'\',\'Used\')">Mark entered</button>'
           : '<span class="meta">'+(p.status==='Pending'?'Awaiting admin':'Closed')+'</span>')+'</td></tr>').join('') +
-      '</tbody></table></div>');
+      '</tbody></table></div>'
+      : empty('No matches', 'No pass code or visitor name matches “'+gateFilter+'”.'));
   },
   vehicles(){
     return head('Vehicle lookup','Check a plate against the registered RFID tags.') +
     sectionCard('Registered vehicles',
       '<div class="tablewrap"><table><thead><tr><th>Plate</th><th>Vehicle</th><th class="hide-sm">Unit</th><th class="hide-sm">Tag</th><th>Status</th></tr></thead><tbody>' +
-      store.stickers.map(s => '<tr><td class="mono"><strong>'+esc(s.plate)+'</strong></td><td>'+esc(s.vehicle)+'</td>' +
-        '<td class="hide-sm mono">'+esc(s.unit)+'</td><td class="hide-sm mono">'+esc(s.tag)+'</td>' +
-        '<td><span class="tag '+statusTag(s.status)+'">'+esc(s.status)+'</span></td></tr>').join('') + '</tbody></table></div>') +
+      store.stickers.map(s => '<tr><td class="mono" data-label="Plate"><strong>'+esc(s.plate)+'</strong></td><td data-label="Vehicle">'+esc(s.vehicle)+'</td>' +
+        '<td class="hide-sm mono" data-label="Unit">'+esc(s.unit)+'</td><td class="hide-sm mono" data-label="Tag">'+esc(s.tag)+'</td>' +
+        '<td data-label="Status"><span class="tag '+statusTag(s.status)+'">'+esc(s.status)+'</span></td></tr>').join('') + '</tbody></table></div>') +
     '<div class="card card-pad" style="margin-top:14px"><div class="ttl">Expired or unlisted plates</div>' +
     '<div class="meta" style="display:block;margin-top:6px">Log the vehicle at the gate and call the admin office. Do not turn away a resident on a lapsed tag alone.</div></div>';
   },
@@ -2526,8 +2628,8 @@ const SECURITY = {
     return head('Duty roster','Who is on post and how to reach them.') +
     sectionCard('This cycle',
       '<div class="tablewrap"><table><thead><tr><th>Post</th><th>Guard</th><th>Shift</th><th class="hide-sm">Contact</th></tr></thead><tbody>' +
-      store.guards.map(g => '<tr><td>'+esc(g.post)+'</td><td><strong>'+esc(g.name)+'</strong></td><td>'+esc(g.shift)+'</td>' +
-        '<td class="hide-sm mono">'+esc(g.contact)+'</td></tr>').join('') + '</tbody></table></div>') +
+      store.guards.map(g => '<tr><td data-label="Post">'+esc(g.post)+'</td><td data-label="Guard"><strong>'+esc(g.name)+'</strong></td><td data-label="Shift">'+esc(g.shift)+'</td>' +
+        '<td class="hide-sm mono" data-label="Contact">'+esc(g.contact)+'</td></tr>').join('') + '</tbody></table></div>') +
     sectionCard('Emergency numbers','<div class="card-pad">' +
       '<div class="kv"><span>Admin office</span><b>0917 555 0100</b></div>' +
       '<div class="kv"><span>Barangay / police</span><b>911 · (049) 555 0199</b></div>' +
@@ -2780,6 +2882,26 @@ function requestForm(){
       autoAssign(item);
       store.requests.unshift(item);
       commit('Request filed by unit '+myUnit()+' — “'+title+'”.',{title:'Request submitted',chat:{kind:'request',id:item.id}}); return true; });
+}
+
+/* visitor passes */
+function genPassCode(){ return 'VS-'+Math.random().toString(36).slice(2,6).toUpperCase(); }
+function visitorForm(){
+  modal('Log a visitor','The admin office reviews it before the code goes active at the gate.',
+    '<label class="fld"><span>Visitor name</span><input class="input" id="f_vname" placeholder="Ana Marquez"></label>' +
+    '<label class="fld"><span>Purpose</span><input class="input" id="f_vpurpose" placeholder="Family visit, delivery, contractor…"></label>' +
+    '<div class="grid g-2" style="gap:0 12px">' +
+      '<label class="fld"><span>Expected date</span><input class="input" id="f_vdate" type="date"></label>' +
+      '<label class="fld"><span>Plate number (optional)</span><input class="input" id="f_vplate" placeholder="ABC 1234"></label></div>',
+    'Submit pass', () => {
+      const visitor=$('#f_vname').value.trim();
+      if(!visitor){ toast('info','Add a name','Tell the gate who to expect.'); return false; }
+      const item = { id:uid(), unit:myUnit(), visitor, purpose:$('#f_vpurpose').value.trim()||'Visit',
+        date:$('#f_vdate').value || new Date().toISOString().slice(0,10),
+        plate:$('#f_vplate').value.trim()||'—', code:genPassCode(), status:'Pending' };
+      store.passes.unshift(item);
+      commit('Visitor pass requested by unit '+myUnit()+' for '+visitor+'.',
+        {title:'Pass submitted', audience:'admin'}); return true; });
 }
 
 /* marketplace */
@@ -3403,6 +3525,16 @@ function resolveTicket(id){ const t=store.tickets.find(x=>x.id===id); t.status='
   commit('Support ticket “'+t.subject+'” marked resolved.',{title:'Ticket resolved',forUnit:t.unit,chat:{kind:'ticket',id:t.id}}); }
 
 /* settings */
+function flipPage(role, id){
+  const list = store.hiddenPages[role] || (store.hiddenPages[role] = []);
+  const i = list.indexOf(id), item = NAV[role].flatMap(g=>g.items).find(x=>x.id===id);
+  if(i >= 0) list.splice(i,1); else list.push(id);
+  commit(item.label+' is now '+(i>=0?'visible':'hidden')+' for '+ROLE_LABEL(role)+' accounts.',{title:'User access updated',audience:'admin'});
+}
+function resetAccess(role){
+  store.hiddenPages[role] = [];
+  commit('Every page is visible again for '+ROLE_LABEL(role)+' accounts.',{title:'User access updated',audience:'admin'});
+}
 function flipSetting(key){ store.settings[key] = !store.settings[key];
   commit('Portal rule updated — '+key.replace(/([A-Z])/g,' $1').toLowerCase()+' is now '+(store.settings[key]?'on':'off')+'.',{title:'Setting saved'}); }
 function flipPref(key){ store.prefs[key] = !store.prefs[key];
