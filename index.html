@@ -3162,7 +3162,13 @@ function userForm(id, presetRole){
       '<label class="fld"><span>Mobile number</span><input class="input" id="f_p" value="'+esc(a?a.phone:'')+'" placeholder="0917 555 0000"></label></div>' +
     '<label class="fld"><span>Title</span><input class="input" id="f_t" value="'+esc(a?a.title:'Owner of record')+'"></label>' +
     (a ? '' :
-      '<p class="meta" style="display:block;margin:0 0 14px">An invitation email goes to them as soon as you add the account. They open the link, choose a password, and they are in.</p>' +
+      '<label class="fld"><span>How they get access</span><select class="input" id="f_s" onchange="pwFieldToggle(this.value)">' +
+        '<option value="Active">Set their password now — no email needed</option>' +
+        '<option value="Invited">Email them an invitation link</option></select></label>' +
+      '<div id="f_pw_wrap"><label class="fld"><span>Password for them</span>' +
+        '<input class="input" id="f_pw" type="text" autocomplete="off" placeholder="At least 8 characters"></label>' +
+        '<p class="meta" style="display:block;margin:-6px 0 14px">Give them this password with their email. They can change it later in Settings.</p></div>' +
+      '<p class="meta hide" id="f_inv_note" style="display:block;margin:0 0 14px">An invitation email goes to them as soon as you add the account. They open the link, choose a password, and they are in.</p>' +
       '<div class="switch" style="border-top:1px solid var(--line);padding-top:14px">' +
         '<div><div class="sl">Also add to the unit registry</div>' +
         '<div class="sd">Owners only — creates the property record and the current dues line.</div></div>' +
@@ -3185,8 +3191,9 @@ function userForm(id, presetRole){
         return true;
       }
 
-      const status = 'Invited';
-      const temp = status==='Active' ? 'temp'+Math.floor(1000+Math.random()*8999) : '';
+      const status = $('#f_s').value, pw = status==='Active' ? $('#f_pw').value : '';
+      if(status==='Active' && pw.length < 8){ toast('info','Password too short','Use at least eight characters.'); return false; }
+      const temp = '';
       store.accounts.push({ id:uid(), name, email, password:temp, role:chosen, unit:unit||'Admin office',
         title:$('#f_t').value.trim()||ROLE_LABEL(chosen), phone:$('#f_p').value.trim(),
         status, added:new Date().toISOString().slice(0,10), lastSeen:null });
@@ -3201,10 +3208,10 @@ function userForm(id, presetRole){
             amount:unitDues(unit), status:'Unpaid', method:'', paidAt:null });
       }
       commit(status==='Active'
-        ? ROLE_LABEL(chosen)+' account added for '+name+'. Temporary password: '+temp
+        ? ROLE_LABEL(chosen)+' account added for '+name+'.'
         : 'Invitation sent to '+email+' as '+ROLE_LABEL(chosen)+'.',
         {title:'Account added'});
-      sendInvite(email, name);
+      if(status==='Active') setLogin(email, pw, name); else sendInvite(email, name);
       return true;
     });
   rolePreview(role);
@@ -3223,9 +3230,15 @@ function setUserStatus(id, status){
 }
 function activateUser(id){
   const a = store.accounts.find(x=>x.id===id);
-  a.status='Active';
-  commit(a.name+' activated. A sign-in link is on its way to '+a.email+'.',{title:'Account activated'});
-  sendInvite(a.email, a.name);
+  modal('Activate '+a.name,'Set a password for them. No email is needed — give them the password with their email.',
+    '<label class="fld"><span>Password for them</span><input class="input" id="f_pw" type="text" autocomplete="off" placeholder="At least 8 characters"></label>',
+    'Activate', () => {
+      const pw = $('#f_pw').value;
+      if(pw.length < 8){ toast('info','Password too short','Use at least eight characters.'); return false; }
+      a.status = 'Active';
+      commit(a.name+' activated.',{title:'Account activated'});
+      setLogin(a.email, pw, a.name);
+      return true; });
 }
 function resendInvite(id){
   const a = store.accounts.find(x=>x.id===id);
@@ -3233,10 +3246,16 @@ function resendInvite(id){
 }
 function resetPassword(id){
   const a = store.accounts.find(x=>x.id===id);
-  modal('Reset password for '+a.name,'They get an email with a link to choose a new password.',
-    '<div class="card card-pad" style="background:var(--paper)"><div class="kv"><span>Unit</span><b>'+esc(a.unit)+'</b></div>' +
-    '<div class="kv"><span>Email</span><b>'+esc(a.email)+'</b></div></div>',
-    'Send reset email', () => {
+  modal('Reset password for '+a.name,'Type a new password for them, or leave it empty to email them a reset link instead.',
+    '<div class="card card-pad" style="background:var(--paper);margin-bottom:14px"><div class="kv"><span>Unit</span><b>'+esc(a.unit)+'</b></div>' +
+    '<div class="kv"><span>Email</span><b>'+esc(a.email)+'</b></div></div>' +
+    '<label class="fld"><span>New password (optional)</span><input class="input" id="f_pw" type="text" autocomplete="off" placeholder="At least 8 characters"></label>',
+    'Reset password', () => {
+      const pw = $('#f_pw').value;
+      if(pw){
+        if(pw.length < 8){ toast('info','Password too short','Use at least eight characters.'); return false; }
+        setLogin(a.email, pw, a.name); return true;
+      }
       if(!sbMail){ toast('info','Not connected','Could not reach the portal server.'); return false; }
       sbMail.auth.resetPasswordForEmail(a.email, { redirectTo:SITE_URL }).then(({ error }) => error
         ? toast('info','Reset email not sent', mailError(error))
@@ -3857,6 +3876,18 @@ function mailError(error){
   if(/rate|seconds|too many/i.test(m)) return 'Too many emails just now. Wait a minute, then try again.';
   if(/not authorized|smtp|sending/i.test(m)) return 'The portal email account is not set up yet (Supabase → Authentication → Emails → SMTP).';
   return m;
+}
+function pwFieldToggle(v){
+  $('#f_pw_wrap').classList.toggle('hide', v !== 'Active');
+  $('#f_inv_note').classList.toggle('hide', v === 'Active');
+}
+async function setLogin(email, password, name){
+  if(!sb){ toast('info','Sign-in not created','Could not reach the portal server.'); return; }
+  const { error } = await sb.rpc('admin_set_login', { p_email:email, p_password:password });
+  if(error) toast('info','Sign-in not created', /admin_set_login/.test(error.message) || error.code === 'PGRST202'
+    ? 'The database is missing one setup step: run supabase-manual-accounts.sql in Supabase, then use Reset password to try again.'
+    : error.message);
+  else toast('ok','Sign-in ready', (name||email)+' can now sign in with '+email+' and the password you set.');
 }
 async function sendInvite(email, name){
   if(!sbMail){ toast('info','Invitation not sent','Could not reach the portal server.'); return; }
