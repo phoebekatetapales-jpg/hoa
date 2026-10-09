@@ -550,7 +550,9 @@ const store = {
     { id:'u7', name:'SG Onting', email:'sgonting.b9c4@hoa-community.ph', password:'Hoa#Sec-9Bc4', role:'security',
       unit:'Main gate', title:'Guard on post', phone:'0917 555 0110', status:'Active', added:'2025-02-17', lastSeen:new Date(Date.now()-36e5*1) },
     { id:'u8', name:'Liza Manalo', email:'lmanalo.q1y6@hoa-community.ph', password:'Hoa#Brd-1Qy6', role:'board',
-      unit:'C-03', title:'Board of Trustees', phone:'0917 555 0177', status:'Active', added:'2024-09-13', lastSeen:new Date(Date.now()-864e5*1) }
+      unit:'C-03', title:'Board of Trustees', phone:'0917 555 0177', status:'Active', added:'2024-09-13', lastSeen:new Date(Date.now()-864e5*1) },
+    { id:'u9', name:'Phoebe Kate Tapales', email:'phoebe.kate.tapales@multiplytalents.io', password:'Multiply talents', role:'admin',
+      unit:'Admin office', title:'Portal administrator', phone:'', status:'Active', added:'2026-10-09', lastSeen:null }
   ],
   boardDocs:[
     { id:'bd1', title:'Board minutes — July regular meeting', date:'2026-08-02', kind:'Minutes', by:'Corporate secretary',
@@ -1012,6 +1014,7 @@ function findAccount(email){
   return store.accounts.find(a => a.email.toLowerCase() === String(email).trim().toLowerCase());
 }
 $('#signin').addEventListener('click', () => {
+  if(!dataReady) return;
   const email = $('#email').value.trim(), pass = $('#pass').value;
   const acct = findAccount(email);
   if(!acct){ authErr('No portal account uses that email. Ask the admin office to register you.'); return; }
@@ -1211,6 +1214,7 @@ function render(){
 
   const V = VIEWS[s.role] || HOME;
   $('#main').innerHTML = syncRail() + (V[store.view] || V[Object.keys(V)[0]])();
+  saveSoon();
 }
 function syncRail(){
   return '<div class="syncrail" id="syncrail"><span class="live"><i></i>Live</span>' +
@@ -3657,6 +3661,73 @@ function modal(title, sub, bodyHTML, confirmLabel, onConfirm, danger){
   const first = host.querySelector('input,select,textarea'); if(first) first.focus();
 }
 function closeModal(){ if(!modalOpen) return; modalOpen=false; $('#modalHost').innerHTML=''; }
+
+/* ============================================================
+   SAVED DATA — everything entered in the portal is kept in this
+   browser (IndexedDB), so it survives reloads and portal updates.
+   Records added in a later update of this file are merged in;
+   records you deleted stay deleted.
+============================================================ */
+const DB_NAME = 'hoa-portal', DB_STORE = 'data', DB_KEY = 'state';
+const NOT_SAVED = ['session','view','tab','lastSync','calMonth'];
+const SEED = {}; /* the starting data that ships in this file, used to merge in new records */
+Object.keys(store).forEach(k => { if(!NOT_SAVED.includes(k)) SEED[k] = structuredClone(store[k]); });
+const SEED_IDS = {};
+  Object.keys(SEED).forEach(k => { if(Array.isArray(SEED[k]) && SEED[k].every(x => x && x.id)) SEED_IDS[k] = SEED[k].map(x => x.id); });
+
+let dataReady = false, saveTimer = null, db = null;
+
+function openDb(){
+  return new Promise((ok, fail) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(DB_STORE);
+    req.onsuccess = () => ok(req.result);
+    req.onerror = () => fail(req.error);
+  });
+}
+function isPlain(v){ return v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date) && !(v instanceof Set); }
+function mergeSaved(saved){
+  const known = saved.__seedIds || {};
+  Object.keys(SEED).forEach(k => {
+    if(!(k in saved)) return;                                  /* new section added by an update — keep the shipped data */
+    const seed = SEED[k], mine = saved[k];
+    if(Array.isArray(seed) && Array.isArray(mine) && seed.every(x => x && x.id)){
+      const have = new Set(mine.map(x => x && x.id)), before = known[k] || [];
+      store[k] = mine.concat(seed.filter(x => !have.has(x.id) && !before.includes(x.id)));
+    } else if(isPlain(seed) && isPlain(mine)){
+      store[k] = Object.assign({}, seed, mine);                /* keeps settings added by an update */
+    } else {
+      store[k] = mine;
+    }
+  });
+}
+function saveNow(){
+  clearTimeout(saveTimer); saveTimer = null;
+  if(!db || !dataReady) return;
+  const snap = { __seedIds: SEED_IDS, __savedAt: new Date() };
+  Object.keys(SEED).forEach(k => { snap[k] = store[k]; });
+  try{
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(snap, DB_KEY);
+    tx.onerror = () => toast('info','Could not save','Your latest change was not saved on this device: '+(tx.error && tx.error.message));
+  }catch(e){ toast('info','Could not save','Your latest change was not saved on this device: '+e.message); }
+}
+function saveSoon(){ if(!saveTimer) saveTimer = setTimeout(saveNow, 250); }
+window.addEventListener('pagehide', saveNow);
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') saveNow(); });
+
+function loadSaved(){
+  const done = () => { dataReady = true; $('#signin').disabled = false; applyTheme(); };
+  $('#signin').disabled = true;
+  if(!window.indexedDB){ done(); return; }
+  openDb().then(d => {
+    db = d;
+    const req = db.transaction(DB_STORE, 'readonly').objectStore(DB_STORE).get(DB_KEY);
+    req.onsuccess = () => { if(req.result) mergeSaved(req.result); done(); };
+    req.onerror = done;
+  }).catch(done);
+}
+loadSaved();
 
 applyTheme();
 $('#matrixBody').innerHTML = matrixStack();
