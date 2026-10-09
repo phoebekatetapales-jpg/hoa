@@ -230,6 +230,14 @@ html[data-theme="dark"] .syncrail.flash{animation:railFlashDark 1.3s ease}
 .rolebadge.board i{background:#6B4BC4}
 .rolebadge.renter{background:var(--paper);color:var(--ink-2);border-color:var(--line)}
 .rolebadge.renter i{background:var(--ink-3)}
+.rolebadge.driver{background:#E7F3FA;color:#1F6E99;border-color:#C6E2F1}
+.rolebadge.driver i{background:#1F6E99}
+.ride-steps{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.ride-steps span{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--paper);color:var(--ink-3);border:1px solid var(--line)}
+.ride-steps span.done{background:var(--emerald-tint);color:var(--emerald);border-color:transparent}
+.ride-steps span.now{background:var(--slate);color:#fff;border-color:transparent}
+.ride-eta{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:8px 12px;border-radius:10px;background:var(--slate-tint);color:var(--slate-dk);font-weight:700;font-size:14px}
+html[data-theme="dark"] .ride-steps span.now{color:#0E121C}
 .avatar{width:34px;height:34px;border-radius:50%;background:var(--slate-tint);color:var(--slate-dk);display:grid;place-items:center;font-weight:700;font-size:13px;border:1px solid #DADFF8;overflow:hidden;flex:none}
 button.avatar{padding:0;font:inherit;cursor:pointer;transition:.15s}
 button.avatar:hover{filter:brightness(0.94)}
@@ -557,6 +565,8 @@ const store = {
       unit:'Main gate', title:'Guard on post', phone:'0917 555 0110', status:'Active', added:'2025-02-17', lastSeen:new Date(Date.now()-36e5*1) },
     { id:'u8', name:'Liza Manalo', email:'lmanalo.q1y6@hoa-community.ph', password:'', role:'board',
       unit:'C-03', title:'Board of Trustees', phone:'0917 555 0177', status:'Active', added:'2024-09-13', lastSeen:new Date(Date.now()-864e5*1) },
+    { id:'u10', name:'Ramon Cruz', email:'rcruz.d2k8@hoa-community.ph', password:'', role:'driver',
+      unit:'Motor pool', title:'Shuttle driver', phone:'0917 555 0190', status:'Active', added:'2026-10-10', lastSeen:null },
     { id:'u9', name:'Phoebe Kate Tapales', email:'phoebe.kate.tapales@multiplytalents.io', password:'', role:'admin',
       unit:'Admin office', title:'Portal administrator', phone:'', status:'Active', added:'2026-10-09', lastSeen:null }
   ],
@@ -590,7 +600,7 @@ const store = {
   prefs:{ email:true, sms:true, push:false, digest:'Weekly', language:'English' },
   linked:{ google:true, facebook:false },
   /* User Access — pages the admin has switched off, per role */
-  hiddenPages:{ homeowner:[], renter:[], security:[], board:[] },
+  hiddenPages:{ homeowner:[], renter:[], security:[], board:[], driver:[] },
   /* per-person overrides: { accountId: { pageId: true|false } } — only pages that differ from their group */
   userAccess:{},
 
@@ -748,7 +758,21 @@ const store = {
     { q:'How do I add a second household member?', a:'Go to Settings and add them under household members. The admin office confirms within one working day.' },
     { q:'Can I vote on someone else\u2019s behalf?', a:'Only with a signed proxy form filed at the office before the ballot closes. One vote per household either way.' }
   ],
-  reportLog:[]
+  reportLog:[],
+
+  /* resident transport — residents book, drivers accept and post the pickup time */
+  rides:[
+    { id:'rd1', unit:'B-12', by:'Rina Dela Cruz', accountId:'u1', pickup:'Unit B-12', dropoff:'SM City Calamba',
+      date:new Date(Date.now()+864e5).toISOString().slice(0,10), time:'09:00', passengers:2, note:'With a stroller.',
+      status:'Accepted', driver:{ id:'u10', name:'Ramon Cruz', phone:'0917 555 0190' }, vehicle:'White Toyota Hiace · NAB 2210',
+      pickupAt:'08:50', at:new Date(Date.now()-36e5*3),
+      updates:[ { at:new Date(Date.now()-36e5*3), text:'Ride requested.' },
+                { at:new Date(Date.now()-36e5*2), text:'Ramon Cruz accepted. Pickup at 8:50 AM.' } ] },
+    { id:'rd2', unit:'A-04', by:'Marco Villanueva', accountId:'u2', pickup:'Unit A-04', dropoff:'Calamba Medical Center',
+      date:new Date(Date.now()+864e5*2).toISOString().slice(0,10), time:'14:00', passengers:1, note:'',
+      status:'Requested', driver:null, vehicle:'', pickupAt:'', at:new Date(Date.now()-36e5),
+      updates:[ { at:new Date(Date.now()-36e5), text:'Ride requested.' } ] }
+  ]
 };
 
 const ROLE_MATRIX = [
@@ -766,7 +790,10 @@ const ROLE_MATRIX = [
     deny:'Board-only matters outside delegated authority.' },
   { role:'board', label:'Board',
     exp:'Governance oversight, approved summaries, Board documents, exceptions and authorised controls.',
-    deny:'Operational personal data not required for Board duties.' }
+    deny:'Operational personal data not required for Board duties.' },
+  { role:'driver', label:'Driver',
+    exp:'Ride requests from residents, their own trip schedule, and pickup-time updates sent to the residents they drive.',
+    deny:'Dues, billing, Board records and resident data beyond the trip itself.' }
 ];
 const ROLE_LABEL = r => (ROLE_MATRIX.find(m=>m.role===r)||{label:r}).label;
 
@@ -1083,6 +1110,7 @@ const NAV = {
       { id:'financial',  label:'Financial',               icon:'peso', badge:()=>
           store.dues.filter(d=>d.status!=='Paid').length + store.expenses.filter(x=>x.status==='For approval').length },
       { id:'reports',    label:'Reports',                 icon:'chart' },
+      { id:'rides',      label:'Transport',               icon:'car', badge:()=>store.rides.filter(r=>r.status==='Requested').length },
       { id:'access',     label:'User Access',             icon:'lock' }
     ]},
     { g:'Account', items:[
@@ -1096,7 +1124,18 @@ const NAV = {
       { id:'events',     label:'Events & amenities', icon:'calendar' },
       { id:'myrequests', label:'My requests',    icon:'wrench' },
       { id:'visitors',   label:'Visitor pass',   icon:'shield', badge:()=>store.passes.filter(p=>p.unit===myUnit()&&p.status==='Pending').length },
+      { id:'rides',      label:'Book a ride',    icon:'car', badge:()=>myRides().filter(r=>r.status==='On the way'||r.status==='Arrived').length },
       { id:'concerns',   label:'Concerns',       icon:'chat' }
+    ]},
+    { g:'Account', items:[
+      { id:'support',  label:'Support',  icon:'life' },
+      { id:'settings', label:'Settings', icon:'gear' }
+    ]}
+  ],
+  driver:[
+    { g:'Transport', items:[
+      { id:'trips',   label:'Ride requests', icon:'car', badge:()=>store.rides.filter(r=>r.status==='Requested').length },
+      { id:'mytrips', label:'My trips',      icon:'calendar', badge:()=>store.rides.filter(r=>r.driver&&r.driver.id===store.session.accountId&&['Accepted','On the way','Arrived'].includes(r.status)).length }
     ]},
     { g:'Account', items:[
       { id:'support',  label:'Support',  icon:'life' },
@@ -1140,7 +1179,8 @@ const NAV = {
       { id:'events',     label:'Events',         icon:'calendar' },
       { id:'book',       label:'Book a facility',icon:'grid' },
       { id:'visitors',   label:'Visitor pass',   icon:'shield', badge:()=>store.passes.filter(p=>p.unit===myUnit()&&p.status==='Pending').length },
-      { id:'marketplace',label:'Marketplace',    icon:'tag' }
+      { id:'marketplace',label:'Marketplace',    icon:'tag' },
+      { id:'rides',      label:'Book a ride',    icon:'car', badge:()=>myRides().filter(r=>r.status==='On the way'||r.status==='Arrived').length }
     ]},
     { g:'Raise it with the board', items:[
       { id:'complaints', label:'Complaints', icon:'flag' },
@@ -1154,6 +1194,7 @@ const NAV = {
   ]
 };
 const ICONS = {
+  car:'<path d="M5 17h14M5 17a2 2 0 1 0 4 0M15 17a2 2 0 1 0 4 0M3 17V12l2.2-5.2A2 2 0 0 1 7.04 5.5h9.92a2 2 0 0 1 1.84 1.3L21 12v5M3 12h18"/>',
   lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   grid:'<path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/>',
   megaphone:'<path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1zM15 8a5 5 0 0 1 0 8M18 5a9 9 0 0 1 0 14"/>',
@@ -1175,7 +1216,7 @@ const svg = k => '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" st
 
 /* ---- User Access: Support and Settings always stay on so nobody is locked out of their account ---- */
 const ACCESS_LOCKED = ['support','settings'];
-const ACCESS_ROLES = ['homeowner','renter','security','board'];
+const ACCESS_ROLES = ['homeowner','renter','security','board','driver'];
 function pageOn(role, id, accountId){
   if(role === 'admin' || ACCESS_LOCKED.includes(id)) return true;
   const mine = accountId && store.userAccess[accountId];
@@ -1195,7 +1236,7 @@ function paintViewAs(){
   const real = realSession();
   if(real.role !== 'admin'){ sel.classList.add('hide'); return; }
   const cur = store.session.accountId;
-  const groups = ['homeowner','renter','security','board','admin'].map(r => {
+  const groups = ['homeowner','renter','security','board','driver','admin'].map(r => {
     const people = store.accounts.filter(a => a.role === r && a.id !== real.accountId && a.status !== 'Suspended')
       .sort((a,b) => a.name.localeCompare(b.name));
     return people.length ? '<optgroup label="'+esc(ROLE_LABEL(r))+'">' + people.map(a =>
@@ -1272,7 +1313,7 @@ function render(){
 
   $('#sideFoot').innerHTML =
     '<div style="font-weight:650;color:var(--ink);font-size:13.5px">'+esc(s.name)+'</div>' +
-    '<div>'+esc(isAdmin() ? 'HOA Admin' : 'Unit '+s.unit)+'</div>' +
+    '<div>'+esc(isAdmin() ? 'HOA Admin' : (s.role==='homeowner'||s.role==='renter') ? 'Unit '+s.unit : s.unit)+'</div>' +
     '<div style="margin-top:5px;font-size:11.5px">Signed in with '+esc(s.method==='password'?'email':s.method)+'</div>';
 
   const V = VIEWS[s.role] || HOME;
@@ -1335,6 +1376,26 @@ function onGateSearch(v){
    ADMIN VIEWS
 ============================================================ */
 const ADMIN = {
+  rides(){
+    const t = tabOf('rides','open');
+    const groups = {
+      open: store.rides.filter(r=>r.status==='Requested'),
+      active: store.rides.filter(r=>['Accepted','On the way','Arrived'].includes(r.status)),
+      done: store.rides.filter(r=>['Completed','Cancelled'].includes(r.status))
+    };
+    const drivers = store.accounts.filter(a=>a.role==='driver');
+    return head('Transport','Every ride residents have booked, and who is driving it. Add drivers from Homeowners → Staff & Board.') +
+      tabs('rides',[{id:'open',label:'Waiting',n:groups.open.length},{id:'active',label:'In progress',n:groups.active.length},{id:'done',label:'Finished'}],'open') +
+      sectionCard(t==='open'?'Waiting for a driver':t==='active'?'Accepted and on the road':'Completed and cancelled',
+        rideList(groups[t].slice().sort(byWhen),'admin','Nothing here','Ride bookings from residents appear here.')) +
+      '<div style="height:14px"></div>' +
+      sectionCard('Drivers · '+drivers.length, drivers.length ? '<ul class="list">'+drivers.map(d =>
+        '<li><div class="row" style="align-items:center"><div class="grow"><div class="ttl">'+esc(d.name)+'</div>' +
+        '<div class="meta"><span class="mono">'+esc(d.phone||'—')+'</span>·<span>'+esc(d.email)+'</span></div></div>' +
+        '<span class="tag '+statusTag(d.status)+'">'+esc(d.status)+'</span></div></li>').join('')+'</ul>'
+        : empty('No drivers yet','Add one from Homeowners → Staff & Board.'),
+        '<button class="btn btn-ghost btn-sm" onclick="userForm(null,\'driver\')">Add driver</button>');
+  },
   access(){
     const role = tabOf('access','homeowner');
     const off = (store.hiddenPages[role]||[]).length;
@@ -1407,7 +1468,7 @@ const ADMIN = {
   homeowners(){
     const t = tabOf('usr','accounts');
     const owners = store.accounts.filter(a=>a.role==='homeowner'||a.role==='renter');
-    const admins = store.accounts.filter(a=>a.role==='admin'||a.role==='security'||a.role==='board');
+    const admins = store.accounts.filter(a=>a.role==='admin'||a.role==='security'||a.role==='board'||a.role==='driver');
     const card = a =>
       '<tr><td data-label="Name"><button class="btn-ghost" style="border:0;background:none;padding:0;cursor:pointer;text-align:left;font:inherit;color:var(--slate)" onclick="homeownerProfile(\''+a.unit+'\')"><strong>'+esc(a.name)+'</strong></button><div class="meta">'+esc(a.email)+'</div></td>' +
       '<td data-label="Role"><span class="tag t-grey">'+esc(ROLE_LABEL(a.role))+'</span><div class="meta mono">'+esc(a.unit)+'</div></td>' +
@@ -1444,11 +1505,12 @@ const ADMIN = {
           '<button class="btn btn-primary btn-sm" style="width:auto" onclick="userForm()">Add resident</button>');
       },
       admins(){
-        return sectionCard('Staff, security and Board accounts',
+        return sectionCard('Staff, security, Board and driver accounts',
           '<div class="tablewrap"><table class="stack-mobile"><thead><tr><th>Name</th><th>Role</th><th class="hide-sm">Mobile</th>' +
           '<th class="hide-sm">Last seen</th><th>Status</th><th></th></tr></thead><tbody>' +
           admins.map(card).join('') + '</tbody></table></div>',
-          '<button class="btn btn-ghost btn-sm" onclick="userForm(null,\'admin\')">Add administrator</button>') +
+          '<div class="btn-row"><button class="btn btn-ghost btn-sm" onclick="userForm(null,\'driver\')">Add driver</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="userForm(null,\'admin\')">Add administrator</button></div>') +
         '<div class="card card-pad" style="margin-top:14px">' +
           '<div class="ttl">What each role sees</div>' +
           '<div class="meta" style="margin-top:8px;display:block">Homeowners reach only their own feed, dues, requests, bookings, complaints, ballot and concerns. ' +
@@ -2412,6 +2474,17 @@ const HOME = {
     sectionCard('My bookings', mine.length ? bookingTable(mine) : empty('Nothing reserved','Pick a facility above to send a request to the board.'));
   },
 
+  /* ---------- RIDES ---------- */
+  rides(){
+    const mine = myRides();
+    const active = mine.filter(r=>!['Completed','Cancelled'].includes(r.status)).sort(byWhen);
+    const past = mine.filter(r=>['Completed','Cancelled'].includes(r.status)).sort(byWhen).reverse();
+    return head('Book a ride','Request a pickup from the subdivision driver. You will see the driver, the pickup time and when they are on the way.',
+      '<button class="btn btn-primary" style="width:auto" onclick="rideForm()">Book a ride</button>') +
+      sectionCard('My rides', rideList(active,'resident','No rides booked','Tap “Book a ride” to request a pickup.')) +
+      (past.length ? '<div style="height:14px"></div>' + sectionCard('Past rides', rideList(past,'resident','','')) : '');
+  },
+
   /* ---------- VISITOR PASSES ---------- */
   visitors(){
     const mine = store.passes.filter(p=>p.unit===myUnit()).slice().sort((a,b)=>a.date<b.date?1:-1);
@@ -2639,6 +2712,7 @@ const RENTER = {
   },
   myrequests(){ return HOME.myrequests(); },
   visitors(){ return HOME.visitors(); },
+  rides(){ return HOME.rides(); },
   concerns(){
     const mine = store.concerns.filter(c=>c.unit===myUnit() && c.by===store.session.name);
     return head('Concerns','Questions and feedback for the board. Complaints against a household must be filed by the owner of record.',
@@ -2656,6 +2730,71 @@ const RENTER = {
 };
 
 /* ---------- SECURITY ---------- */
+/* ---------- TRANSPORT (shared) ---------- */
+const RIDE_STEPS = ['Requested','Accepted','On the way','Arrived','Completed'];
+const RIDE_TAG = { 'Requested':'t-amber','Accepted':'t-slate','On the way':'t-slate','Arrived':'t-emerald','Completed':'t-emerald','Cancelled':'t-grey' };
+const myRides = () => store.rides.filter(r => r.unit===myUnit() && (r.accountId ? r.accountId===store.session.accountId : true));
+function fmtTime(hm){
+  if(!hm) return '';
+  const [h,m] = String(hm).split(':').map(Number);
+  return ((h%12)||12)+':'+String(m||0).padStart(2,'0')+' '+(h<12?'AM':'PM');
+}
+function rideCard(r, who){
+  const me = store.session.accountId, mine = r.driver && r.driver.id===me;
+  const step = RIDE_STEPS.indexOf(r.status);
+  const steps = r.status==='Cancelled' ? '' : '<div class="ride-steps">' + RIDE_STEPS.map((s,i) =>
+    '<span class="'+(i<step?'done':i===step?'now':'')+'">'+esc(s)+'</span>').join('') + '</div>';
+  const eta = r.pickupAt && ['Accepted','On the way','Arrived'].includes(r.status)
+    ? '<div class="ride-eta">'+svg('car')+(r.status==='Arrived' ? 'Your driver is at the pickup point' : r.status==='On the way' ? 'On the way · arriving around '+esc(fmtTime(r.pickupAt)) : 'Pickup at '+esc(fmtTime(r.pickupAt))+' · '+esc(fmtDate(r.date)))+'</div>' : '';
+  const actions = [];
+  if(who==='resident' && ['Requested','Accepted'].includes(r.status))
+    actions.push('<button class="btn btn-danger btn-sm" onclick="cancelRide(\''+r.id+'\')">Cancel ride</button>');
+  if(who==='driver'){
+    if(r.status==='Requested') actions.push('<button class="btn btn-emerald btn-sm" onclick="acceptRide(\''+r.id+'\')">Accept &amp; set pickup time</button>');
+    if(mine && r.status==='Accepted') actions.push('<button class="btn btn-primary btn-sm" style="width:auto" onclick="rideOnTheWay(\''+r.id+'\')">I\'m on the way</button>');
+    if(mine && r.status==='On the way') actions.push('<button class="btn btn-primary btn-sm" style="width:auto" onclick="rideStatus(\''+r.id+'\',\'Arrived\')">I\'ve arrived</button>');
+    if(mine && r.status==='Arrived') actions.push('<button class="btn btn-emerald btn-sm" onclick="rideStatus(\''+r.id+'\',\'Completed\')">Trip completed</button>');
+    if(mine && ['Accepted','On the way'].includes(r.status)) actions.push('<button class="btn btn-ghost btn-sm" onclick="acceptRide(\''+r.id+'\')">Change pickup time</button>');
+  }
+  if(who==='admin' && !['Completed','Cancelled'].includes(r.status))
+    actions.push('<button class="btn btn-danger btn-sm" onclick="cancelRide(\''+r.id+'\')">Cancel ride</button>');
+  return '<li><div class="row"><div class="grow">' +
+    '<div class="ttl">'+esc(r.pickup)+' → '+esc(r.dropoff)+'</div>' +
+    '<div class="meta"><span>'+esc(fmtDate(r.date))+', '+esc(fmtTime(r.time))+'</span>·<span>'+r.passengers+' passenger'+(r.passengers>1?'s':'')+'</span>' +
+      (who!=='resident' ? '·<span class="mono">'+esc(r.unit)+'</span>·<span>'+esc(r.by)+'</span>' : '') + '</div>' +
+    (r.note ? '<div class="body">'+esc(r.note)+'</div>' : '') +
+    (r.driver ? '<div class="meta">Driver: <strong style="color:var(--ink)">'+esc(r.driver.name)+'</strong>'+(r.driver.phone?' · <span class="mono">'+esc(r.driver.phone)+'</span>':'')+(r.vehicle?' · '+esc(r.vehicle):'')+'</div>' : '') +
+    eta + steps +
+    (r.updates && r.updates.length ? '<div class="meta" style="display:block;margin-top:8px">Latest: '+esc(r.updates[r.updates.length-1].text)+' · '+ago(r.updates[r.updates.length-1].at)+'</div>' : '') +
+    (actions.length ? '<div class="btn-row" style="margin-top:11px">'+actions.join('')+'</div>' : '') +
+    '</div><span class="tag '+(RIDE_TAG[r.status]||'t-grey')+'">'+esc(r.status)+'</span></div></li>';
+}
+function rideList(list, who, emptyT, emptyD){
+  return list.length ? '<ul class="list">'+list.map(r => rideCard(r, who)).join('')+'</ul>' : empty(emptyT, emptyD);
+}
+const byWhen = (a,b) => (a.date+(a.pickupAt||a.time)) < (b.date+(b.pickupAt||b.time)) ? -1 : 1;
+
+/* ---------- DRIVER ---------- */
+const DRIVER = {
+  trips(){
+    const open = store.rides.filter(r=>r.status==='Requested').slice().sort(byWhen);
+    return head('Ride requests','Residents waiting for a driver. Accept one and set the pickup time — the resident is told straight away.') +
+      sectionCard('Waiting for a driver · '+open.length, rideList(open,'driver','No requests right now','New ride bookings from residents appear here.'));
+  },
+  mytrips(){
+    const me = store.session.accountId;
+    const mine = store.rides.filter(r=>r.driver && r.driver.id===me);
+    const active = mine.filter(r=>['Accepted','On the way','Arrived'].includes(r.status)).sort(byWhen);
+    const done = mine.filter(r=>['Completed','Cancelled'].includes(r.status)).sort(byWhen).reverse();
+    return head('My trips','Update each trip as you go. Every tap sends the resident a notification with the pickup time.') +
+      sectionCard('Upcoming and in progress', rideList(active,'driver','No trips yet','Accept a ride request to see it here.')) +
+      '<div style="height:14px"></div>' +
+      sectionCard('Finished', rideList(done,'driver','Nothing finished yet','Completed and cancelled trips are kept here.'));
+  },
+  support(){ return supportView(false); },
+  settings(){ return head('Settings','Your profile and how the portal reaches you.') + accountSettings(); }
+};
+
 const SECURITY = {
   gate(){
     const active = store.passes.filter(p=>p.status==='Active');
@@ -2812,7 +2951,7 @@ const BOARD = {
   settings(){ return head('Settings','Your profile and how the portal reaches you.') + accountSettings(); }
 };
 
-const VIEWS = { admin:ADMIN, homeowner:HOME, renter:RENTER, security:SECURITY, board:BOARD };
+const VIEWS = { admin:ADMIN, homeowner:HOME, renter:RENTER, security:SECURITY, board:BOARD, driver:DRIVER };
 
 /* ============================================================
    CALENDAR
@@ -2961,6 +3100,85 @@ function requestForm(){
       autoAssign(item);
       store.requests.unshift(item);
       commit('Request filed by unit '+myUnit()+' — “'+title+'”.',{title:'Request submitted',chat:{kind:'request',id:item.id}}); return true; });
+}
+
+/* rides */
+function gotoRides(){ go(store.session.role==='driver' ? 'mytrips' : 'rides'); }
+function rideForm(){
+  const today = new Date(), later = new Date(Date.now()+36e5);
+  modal('Book a ride','The subdivision driver confirms and tells you the pickup time.',
+    '<div class="grid g-2" style="gap:0 12px">' +
+      '<label class="fld"><span>Pickup</span><input class="input" id="f_pk" value="Unit '+esc(myUnit())+'"></label>' +
+      '<label class="fld"><span>Going to</span><input class="input" id="f_dr" placeholder="SM City Calamba"></label></div>' +
+    '<div class="grid g-2" style="gap:0 12px">' +
+      '<label class="fld"><span>Date</span><input class="input" id="f_rd" type="date" value="'+iso(today)+'"></label>' +
+      '<label class="fld"><span>Pickup time</span><input class="input" id="f_rt" type="time" value="'+String(later.getHours()).padStart(2,'0')+':00"></label></div>' +
+    '<label class="fld"><span>Passengers</span><input class="input" id="f_rp" type="number" min="1" max="12" value="1"></label>' +
+    '<label class="fld"><span>Note for the driver (optional)</span><input class="input" id="f_rn" placeholder="Luggage, wheelchair, child seat…"></label>',
+    'Book ride', () => {
+      const dropoff=$('#f_dr').value.trim(), date=$('#f_rd').value, time=$('#f_rt').value;
+      if(!dropoff){ toast('info','Where to?','Add where you are going.'); return false; }
+      if(!date || !time){ toast('info','Pick a date and time','The driver needs to know when.'); return false; }
+      const r = { id:uid(), unit:myUnit(), by:store.session.name, accountId:store.session.accountId,
+        pickup:$('#f_pk').value.trim()||('Unit '+myUnit()), dropoff, date, time, passengers:Math.max(1,Number($('#f_rp').value)||1),
+        note:$('#f_rn').value.trim(), status:'Requested', driver:null, vehicle:'', pickupAt:'', at:new Date(),
+        updates:[{ at:new Date(), text:'Ride requested.' }] };
+      store.rides.unshift(r);
+      commit('Unit '+myUnit()+' booked a ride to '+dropoff+' on '+fmtDate(date)+', '+fmtTime(time)+'.',
+        { title:'Ride requested', audience:['driver','admin'], go:gotoRides });
+      return true; });
+}
+function acceptRide(id){
+  const r = store.rides.find(x=>x.id===id); if(!r) return;
+  const changing = r.driver && r.driver.id===store.session.accountId;
+  modal(changing ? 'Change pickup time' : 'Accept this ride', r.pickup+' → '+r.dropoff+' · '+fmtDate(r.date)+', requested for '+fmtTime(r.time),
+    '<label class="fld"><span>Pickup time you will arrive</span><input class="input" id="f_pa" type="time" value="'+esc(r.pickupAt||r.time)+'"></label>' +
+    '<label class="fld"><span>Vehicle (optional)</span><input class="input" id="f_vh" value="'+esc(r.vehicle||'')+'" placeholder="White Toyota Hiace · NAB 2210"></label>',
+    changing ? 'Update time' : 'Accept ride', () => {
+      const at = $('#f_pa').value;
+      if(!at){ toast('info','Add a pickup time','The resident needs to know when you will arrive.'); return false; }
+      const s = store.session;
+      r.driver = { id:s.accountId, name:s.name, phone:s.phone||'' };
+      r.vehicle = $('#f_vh').value.trim(); r.pickupAt = at;
+      if(r.status==='Requested') r.status = 'Accepted';
+      const text = changing ? 'Pickup time changed to '+fmtTime(at)+'.' : s.name+' accepted. Pickup at '+fmtTime(at)+'.';
+      r.updates.push({ at:new Date(), text });
+      commit(changing
+        ? 'Your ride to '+r.dropoff+': '+s.name+' will now pick you up at '+fmtTime(at)+' on '+fmtDate(r.date)+'.'
+        : 'Ride confirmed — '+s.name+' will pick up unit '+r.unit+' at '+fmtTime(at)+' on '+fmtDate(r.date)+'.',
+        { title: changing ? 'Pickup time changed' : 'Ride confirmed', forUnit:r.unit, audience:['admin'], go:gotoRides });
+      return true; });
+}
+function rideOnTheWay(id){
+  const r = store.rides.find(x=>x.id===id); if(!r) return;
+  modal('On the way','How many minutes until you reach '+r.pickup+'?',
+    '<label class="fld"><span>Minutes away</span><input class="input" id="f_eta" type="number" min="1" max="120" value="10"></label>',
+    'Send update', () => {
+      const mins = Math.max(1, Number($('#f_eta').value)||10), when = new Date(Date.now()+mins*6e4);
+      r.pickupAt = String(when.getHours()).padStart(2,'0')+':'+String(when.getMinutes()).padStart(2,'0');
+      rideStatus(id, 'On the way', 'about '+mins+' min away, arriving around '+fmtTime(r.pickupAt));
+      return true; });
+}
+function rideStatus(id, status, detail){
+  const r = store.rides.find(x=>x.id===id); if(!r) return;
+  r.status = status;
+  const d = r.driver ? r.driver.name : 'The driver';
+  const text = { 'On the way': d+' is on the way'+(detail?' — '+detail:'')+'.',
+                 'Arrived':    d+' has arrived at '+r.pickup+'.',
+                 'Completed':  'Trip to '+r.dropoff+' completed.' }[status] || status+'.';
+  r.updates.push({ at:new Date(), text });
+  commit(text, { title:'Ride '+status.toLowerCase(), forUnit:r.unit, audience:['admin'], go:gotoRides });
+}
+function cancelRide(id){
+  const r = store.rides.find(x=>x.id===id); if(!r) return;
+  modal('Cancel this ride?', r.pickup+' → '+r.dropoff+' · '+fmtDate(r.date)+', '+fmtTime(r.pickupAt||r.time),
+    '<p class="meta" style="display:block">'+(r.driver ? esc(r.driver.name)+' will be told it is cancelled.' : 'No driver has taken it yet.')+'</p>',
+    'Cancel ride', () => {
+      r.status = 'Cancelled';
+      r.updates.push({ at:new Date(), text:'Cancelled by '+store.session.name+'.' });
+      commit('Ride for unit '+r.unit+' to '+r.dropoff+' on '+fmtDate(r.date)+' was cancelled.',
+        { title:'Ride cancelled', forUnit:r.unit, audience:['driver','admin'], go:gotoRides });
+      return true; }, true);
 }
 
 /* visitor passes */
