@@ -121,6 +121,9 @@ textarea.input{min-height:96px;resize:vertical}
 .rolebadge.admin i{background:var(--emerald)}
 @media(max-width:600px){.rolebadge .unit{display:none}}
 .chiprow{display:flex;gap:8px;flex-wrap:wrap}
+.viewas-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--amber-tint);border:1px solid var(--amber);color:var(--amber);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:13.5px;font-weight:600}
+.viewas-bar span{flex:1;min-width:200px}
+@media(max-width:480px){#viewAsSel{max-width:118px !important;font-size:12px !important;padding:7px 6px !important}.topbar .rolebadge{display:none}}
 .chip{border:1px solid var(--line);background:#fff;padding:8px 13px;border-radius:20px;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;transition:.14s}
 .chip:hover{border-color:var(--slate);color:var(--slate-dk);background:var(--slate-tint)}
 html[data-theme="dark"]{
@@ -471,6 +474,7 @@ html[data-theme="dark"] .bubble.mine{color:#0E121C}
     <div class="brand"><span class="glyph">HOA</span><span class="nm" id="brandName">Homeowners Association</span></div>
     <div class="spacer"></div>
     <span class="rolebadge" id="roleBadge"></span>
+    <select class="input hide" id="viewAsSel" onchange="viewAs(this.value)" aria-label="View the portal as" title="View the portal as someone else" style="width:auto;max-width:190px;padding:7px 10px;font-size:13px;font-weight:600"></select>
     <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Switch to dark mode" title="Dark mode"></button>
     <div class="bellwrap hide" id="availWrap">
       <button class="icon-btn" id="availBtn" onclick="toggleAvailMenu(event)" aria-label="Set your availability" aria-expanded="false" title="Availability">
@@ -792,6 +796,7 @@ function ago(d){ const s=(Date.now()-new Date(d))/1000;
   if(s<86400) return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; }
 const initials = n => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const isAdmin = () => store.session.role === 'admin';
+const realSession = () => store.adminSession || store.session;   /* the person actually signed in */
 const myUnit = () => store.session.unit;
 const unitDues = u => {
   if(store.settings.duesMode==='flat') return Math.round(store.settings.duesFlatAmount);
@@ -1040,6 +1045,7 @@ function enter(acct, method){
   acct.availability = 'available'; /* every fresh sign-in starts Available; they set lunch/break/away themselves after */
   store.session = { authed:true, method, accountId:acct.id, name:acct.name, email:acct.email,
                     phone:acct.phone, unit:acct.unit, role:acct.role, avatar:acct.avatar||null, availability:acct.availability };
+  store.adminSession = null;
   store.view = isAdmin() ? 'overview' : 'feed';
   store.tab = {};
   $('#auth').classList.add('hide'); $('#app').classList.remove('hide');
@@ -1050,6 +1056,7 @@ function enter(acct, method){
 function signOut(){
   if(sb) sb.auth.signOut();
   cloudOn = false; stopLive();
+  if(store.adminSession){ store.session = store.adminSession; store.adminSession = null; }
   store.session.authed=false; store.tab={};
   $('#app').classList.add('hide'); $('#auth').classList.remove('hide');
   $('#pass').value=''; authErr(''); closeDrawer(); closeNotifs();
@@ -1182,6 +1189,47 @@ function go(view){
   if(!pageOn(store.session.role, view, store.session.accountId)){ toast('info','Not available','The admin office has turned this page off for your account.'); return; }
   store.view=view; closeDrawer(); render(); window.scrollTo({top:0,behavior:'smooth'});
 }
+/* ---- View as: an admin sees the portal exactly as another person does, without signing in again ---- */
+function paintViewAs(){
+  const sel = $('#viewAsSel'); if(!sel) return;
+  const real = realSession();
+  if(real.role !== 'admin'){ sel.classList.add('hide'); return; }
+  const cur = store.session.accountId;
+  const groups = ['homeowner','renter','security','board','admin'].map(r => {
+    const people = store.accounts.filter(a => a.role === r && a.id !== real.accountId && a.status !== 'Suspended')
+      .sort((a,b) => a.name.localeCompare(b.name));
+    return people.length ? '<optgroup label="'+esc(ROLE_LABEL(r))+'">' + people.map(a =>
+      '<option value="'+esc(a.id)+'"'+(a.id===cur?' selected':'')+'>'+esc(a.name)+(a.unit && r!=='admin' ? ' · '+esc(a.unit) : '')+'</option>').join('') + '</optgroup>' : '';
+  }).join('');
+  sel.innerHTML = '<option value="">'+(store.adminSession ? '← Back to my admin view' : 'View as…')+'</option>' + groups;
+  sel.value = store.adminSession ? cur : '';
+  sel.classList.remove('hide');
+}
+function viewAsBar(){
+  if(!store.adminSession) return '';
+  const s = store.session;
+  return '<div class="viewas-bar"><span>You are viewing the portal as '+esc(s.name)+' ('+esc(ROLE_LABEL(s.role))+
+    (s.role==='homeowner'||s.role==='renter' ? ' · '+esc(s.unit) : '')+'). Anything you change here is saved for real.</span>' +
+    '<button class="btn btn-ghost btn-sm" onclick="viewAs(\'\')">Back to admin</button></div>';
+}
+function viewAs(id){
+  const real = realSession();
+  if(real.role !== 'admin') return;
+  closeDrawer(); closeNotifs(); closeModal();
+  if(!id || id === real.accountId){
+    if(store.adminSession){ store.session = store.adminSession; store.adminSession = null; }
+    store.view = 'overview'; store.tab = {}; render();
+    toast('info','Back to admin','You are seeing your own admin portal again.');
+    return;
+  }
+  const a = store.accounts.find(x => x.id === id); if(!a) return;
+  if(!store.adminSession) store.adminSession = store.session;
+  store.session = { authed:true, method:real.method, accountId:a.id, name:a.name, email:a.email, phone:a.phone,
+                    unit:a.unit, role:a.role, avatar:a.avatar||null, availability:a.availability||'available' };
+  store.view = 'feed'; store.tab = {}; render();
+  window.scrollTo({ top:0 });
+  toast('info','Viewing as '+a.name, 'This is exactly what '+a.name.split(' ')[0]+' sees, including any pages you have hidden from them.');
+}
 function goTab(section, tab){ store.tab[section]=tab; render(); }
 function tabOf(section, dflt){ return store.tab[section] || dflt; }
 function tabs(section, items, dflt){
@@ -1201,7 +1249,8 @@ document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeDrawer();
 function render(){
   if(!store.session.authed) return;
   const s = store.session;
-  const myAcct = store.accounts.find(a=>a.id===s.accountId); if(myAcct) myAcct.lastSeen = new Date();
+  const myAcct = !store.adminSession && store.accounts.find(a=>a.id===s.accountId); if(myAcct) myAcct.lastSeen = new Date();
+  paintViewAs();
   $('#avatar').innerHTML = s.avatar ? '<img src="'+s.avatar+'" alt="">' : esc(initials(s.name));
   $('#avatar').title = s.name + ' · ' + s.email + ' · Settings';
   $('#brandName').textContent = store.settings.assocName.replace(/^HOA\s*[—-]\s*/,'');
@@ -1227,7 +1276,7 @@ function render(){
     '<div style="margin-top:5px;font-size:11.5px">Signed in with '+esc(s.method==='password'?'email':s.method)+'</div>';
 
   const V = VIEWS[s.role] || HOME;
-  $('#main').innerHTML = syncRail() + (V[store.view] || V[Object.keys(V)[0]])();
+  $('#main').innerHTML = viewAsBar() + syncRail() + (V[store.view] || V[Object.keys(V)[0]])();
   saveSoon();
 }
 function syncRail(){
@@ -3922,13 +3971,13 @@ function pushSoon(){ if(cloudOn && !pushTimer) pushTimer = setTimeout(pushNow, 4
 async function pushNow(){
   clearTimeout(pushTimer); pushTimer = null;
   if(!cloudOn) return;
-  const admin = isAdmin(), me = store.session.accountId;
+  const real = realSession(), admin = real.role === 'admin', me = real.accountId;
   const rows = [];
   SHARED_KEYS.forEach(k => {
     if(!admin && ADMIN_ONLY.includes(k)) return;
     const s = sig(k);
     if(s === synced[k]) return;
-    rows.push({ key:k, value:JSON.parse(s), updated_at:new Date().toISOString(), updated_by:store.session.email });
+    rows.push({ key:k, value:JSON.parse(s), updated_at:new Date().toISOString(), updated_by:realSession().email });
     synced[k] = s;
   });
   if(rows.length){
@@ -3966,7 +4015,7 @@ async function reloadMembers(){
   if(!cloudOn) return;
   const { data, error } = await sb.from('members').select('*').order('added');
   if(error) return;
-  const mine = data.find(r => r.id === store.session.accountId);
+  const mine = data.find(r => r.id === realSession().accountId);
   if(!mine || mine.status === 'Suspended'){
     signOut(); authErr('Your portal access has been turned off. Contact the admin office.'); return;
   }
@@ -3988,7 +4037,7 @@ function startLive(){
     .subscribe();
   clearInterval(heartbeat);
   heartbeat = setInterval(() => {
-    if(cloudOn) sb.from('members').update({ last_seen:new Date().toISOString() }).eq('id', store.session.accountId).then(() => {});
+    if(cloudOn) sb.from('members').update({ last_seen:new Date().toISOString() }).eq('id', realSession().accountId).then(() => {});
   }, 120000);
 }
 function stopLive(){
