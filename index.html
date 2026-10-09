@@ -1239,11 +1239,13 @@ function paintViewAs(){
   const groups = ['homeowner','renter','security','board','driver','admin'].map(r => {
     const people = store.accounts.filter(a => a.role === r && a.id !== real.accountId && a.status !== 'Suspended')
       .sort((a,b) => a.name.localeCompare(b.name));
-    return people.length ? '<optgroup label="'+esc(ROLE_LABEL(r))+'">' + people.map(a =>
-      '<option value="'+esc(a.id)+'"'+(a.id===cur?' selected':'')+'>'+esc(a.name)+(a.unit && r!=='admin' ? ' · '+esc(a.unit) : '')+'</option>').join('') + '</optgroup>' : '';
+    if(!people.length && r==='admin') return '';
+    return '<optgroup label="'+esc(ROLE_LABEL(r))+'">' + (people.length ? people.map(a =>
+      '<option value="'+esc(a.id)+'"'+(a.id===cur?' selected':'')+'>'+esc(a.name)+(a.unit && r!=='admin' ? ' · '+esc(a.unit) : '')+'</option>').join('')
+      : '<option value="role:'+r+'"'+(cur==='preview-'+r?' selected':'')+'>'+esc(ROLE_LABEL(r))+' view (sample)</option>') + '</optgroup>';
   }).join('');
   sel.innerHTML = '<option value="">'+(store.adminSession ? '← Back to my admin view' : 'View as…')+'</option>' + groups;
-  sel.value = store.adminSession ? cur : '';
+  sel.value = store.adminSession ? (String(cur).startsWith('preview-') ? 'role:'+cur.slice(8) : cur) : '';
   sel.classList.remove('hide');
 }
 function viewAsBar(){
@@ -1263,7 +1265,11 @@ function viewAs(id){
     toast('info','Back to admin','You are seeing your own admin portal again.');
     return;
   }
-  const a = store.accounts.find(x => x.id === id); if(!a) return;
+  const sample = { homeowner:'B-12', renter:'C-21', security:'Main gate', board:'Board office', driver:'Motor pool' };
+  const a = String(id).startsWith('role:')
+    ? (r => ({ id:'preview-'+r, name:ROLE_LABEL(r)+' (sample)', email:'', phone:'', unit:sample[r]||'', role:r }))(id.slice(5))
+    : store.accounts.find(x => x.id === id);
+  if(!a) return;
   if(!store.adminSession) store.adminSession = store.session;
   store.session = { authed:true, method:real.method, accountId:a.id, name:a.name, email:a.email, phone:a.phone,
                     unit:a.unit, role:a.role, avatar:a.avatar||null, availability:a.availability||'available' };
