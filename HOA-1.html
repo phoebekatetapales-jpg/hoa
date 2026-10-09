@@ -585,6 +585,8 @@ const store = {
   linked:{ google:true, facebook:false },
   /* User Access — pages the admin has switched off, per role */
   hiddenPages:{ homeowner:[], renter:[], security:[], board:[] },
+  /* per-person overrides: { accountId: { pageId: true|false } } — only pages that differ from their group */
+  userAccess:{},
 
   announcements:[
     { id:'a1', title:'Water interruption — Friday, Aug 28', date:'2026-08-24', category:'Advisory',
@@ -1157,15 +1159,17 @@ const svg = k => '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" st
 /* ---- User Access: Support and Settings always stay on so nobody is locked out of their account ---- */
 const ACCESS_LOCKED = ['support','settings'];
 const ACCESS_ROLES = ['homeowner','renter','security','board'];
-function pageOn(role, id){
+function pageOn(role, id, accountId){
   if(role === 'admin' || ACCESS_LOCKED.includes(id)) return true;
+  const mine = accountId && store.userAccess[accountId];
+  if(mine && id in mine) return mine[id];
   return !((store.hiddenPages[role] || []).includes(id));
 }
-function navFor(role){
-  return NAV[role].map(g => ({ g:g.g, items:g.items.filter(it => pageOn(role, it.id)) })).filter(g => g.items.length);
+function navFor(role, accountId){
+  return NAV[role].map(g => ({ g:g.g, items:g.items.filter(it => pageOn(role, it.id, accountId)) })).filter(g => g.items.length);
 }
 function go(view){
-  if(!pageOn(store.session.role, view)){ toast('info','Not available','The admin office has turned this page off for your account.'); return; }
+  if(!pageOn(store.session.role, view, store.session.accountId)){ toast('info','Not available','The admin office has turned this page off for your account.'); return; }
   store.view=view; closeDrawer(); render(); window.scrollTo({top:0,behavior:'smooth'});
 }
 function goTab(section, tab){ store.tab[section]=tab; render(); }
@@ -1198,8 +1202,8 @@ function render(){
   paintBell(); applyTheme(); paintMsgBtn(); paintAvail();
   const availWrap = $('#availWrap'); if(availWrap) availWrap.classList.toggle('hide', s.role !== 'admin');
 
-  const nav = navFor(s.role);
-  if(!pageOn(s.role, store.view) || !(VIEWS[s.role]||HOME)[store.view]) store.view = nav[0].items[0].id;
+  const nav = navFor(s.role, s.accountId);
+  if(!pageOn(s.role, store.view, s.accountId) || !(VIEWS[s.role]||HOME)[store.view]) store.view = nav[0].items[0].id;
   $('#nav').innerHTML = nav.map(group =>
     '<p class="navlabel">'+esc(group.g)+'</p>' + group.items.map(it => {
       const n = it.badge ? it.badge() : 0;
@@ -1285,16 +1289,18 @@ const ADMIN = {
           '<button class="tgl" role="switch" aria-checked="'+on+'" aria-label="'+esc(it.label)+'"'+
           (locked ? ' disabled style="opacity:.45;cursor:not-allowed"' : ' onclick="flipPage(\''+role+'\',\''+it.id+'\')"')+'><i></i></button></div>';
       }).join('')).join('');
-    return head('User Access','Choose which pages each type of user can see. A switch applies to everyone listed under that tab.') +
+    return head('User Access','Set what each group can see, then use Limit access to fine-tune it for one person.') +
       tabs('access', ACCESS_ROLES.map(r => ({ id:r, label:ROLE_LABEL(r), n:(store.hiddenPages[r]||[]).length ? (store.hiddenPages[r].length+' off') : '' })), 'homeowner') +
       sectionCard(ROLE_LABEL(role)+' accounts · '+people.length, people.length ? '<ul class="list">' + people.map(a =>
         '<li><div class="row" style="align-items:center"><div class="avatar">'+(a.avatar ? '<img src="'+a.avatar+'" alt="">' : esc(initials(a.name)))+'</div>' +
         '<div class="grow"><div class="ttl">'+esc(a.name)+'</div>' +
         '<div class="meta"><span class="mono">'+esc(a.unit)+'</span>·<span>'+esc(a.email)+'</span></div></div>' +
-        '<span class="tag '+statusTag(a.status)+'">'+esc(a.status)+'</span></div></li>').join('') + '</ul>'
+        (customCount(a.id) ? '<span class="tag t-amber">'+customCount(a.id)+' custom</span>' : '') +
+        '<span class="tag '+statusTag(a.status)+'">'+esc(a.status)+'</span>' +
+        '<button class="btn btn-ghost btn-sm" onclick="personAccess(\''+a.id+'\')">Limit access</button></div></li>').join('') + '</ul>'
         : empty('No '+ROLE_LABEL(role).toLowerCase()+' accounts yet','Add one from Homeowners.')) +
       '<div style="height:14px"></div>' +
-      sectionCard(ROLE_LABEL(role)+' pages', '<div class="card-pad">'+rows+'</div>',
+      sectionCard('Pages for all '+ROLE_LABEL(role).toLowerCase()+' accounts', '<div class="card-pad">'+rows+'</div>',
         off ? '<button class="btn btn-ghost btn-sm" onclick="resetAccess(\''+role+'\')">Turn all back on</button>' : '');
   },
   overview(){
@@ -3542,6 +3548,46 @@ function flipPage(role, id){
   const i = list.indexOf(id), item = NAV[role].flatMap(g=>g.items).find(x=>x.id===id);
   if(i >= 0) list.splice(i,1); else list.push(id);
   commit(item.label+' is now '+(i>=0?'visible':'hidden')+' for '+ROLE_LABEL(role)+' accounts.',{title:'User access updated',audience:'admin'});
+}
+function customCount(accountId){ return Object.keys(store.userAccess[accountId] || {}).length; }
+function personAccess(accountId){
+  const a = store.accounts.find(x => x.id === accountId); if(!a) return;
+  const draft = {};
+  NAV[a.role].forEach(g => g.items.forEach(it => { draft[it.id] = pageOn(a.role, it.id, a.id); }));
+  window._accessDraft = draft;
+  const body = '<div style="max-height:56vh;overflow:auto;margin:6px 0 4px">' + NAV[a.role].map(g =>
+    '<p class="navlabel" style="margin:12px 0 2px">'+esc(g.g)+'</p>' + g.items.map(it => {
+      const locked = ACCESS_LOCKED.includes(it.id);
+      return '<div class="switch"><div><div class="sl">'+esc(it.label)+'</div><div class="sd" id="pa_'+it.id+'">'+personHint(a, it.id)+'</div></div>' +
+        '<button class="tgl" role="switch" aria-checked="'+draft[it.id]+'" aria-label="'+esc(it.label)+'"' +
+        (locked ? ' disabled style="opacity:.45;cursor:not-allowed"' : ' onclick="flipDraft(this,\''+a.id+'\',\''+it.id+'\')"')+'><i></i></button></div>';
+    }).join('')).join('') + '</div>' +
+    (customCount(a.id) ? '<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="clearPersonAccess(\''+a.id+'\')">Use group settings again</button>' : '');
+  modal('Limit access for '+a.name, ROLE_LABEL(a.role)+' · '+a.unit+'. Turn off any page this person should not see.', body, 'Save', () => {
+    const over = {};
+    Object.keys(draft).forEach(id => {
+      if(ACCESS_LOCKED.includes(id)) return;
+      if(draft[id] !== pageOn(a.role, id)) over[id] = draft[id];   /* keep only what differs from the group */
+    });
+    if(Object.keys(over).length) store.userAccess[a.id] = over; else delete store.userAccess[a.id];
+    commit('Access updated for '+a.name+'.',{title:'User access updated',audience:'admin'});
+  });
+}
+function personHint(a, id){
+  if(ACCESS_LOCKED.includes(id)) return 'Always on.';
+  const d = window._accessDraft[id], grp = pageOn(a.role, id);
+  return (d ? 'Can see this page' : 'Hidden from this person') + (d === grp ? ' · same as group' : ' · custom');
+}
+function flipDraft(btn, accountId, id){
+  const a = store.accounts.find(x => x.id === accountId);
+  window._accessDraft[id] = !window._accessDraft[id];
+  btn.setAttribute('aria-checked', window._accessDraft[id]);
+  const el = document.getElementById('pa_'+id); if(el) el.textContent = personHint(a, id);
+}
+function clearPersonAccess(accountId){
+  const a = store.accounts.find(x => x.id === accountId);
+  delete store.userAccess[accountId]; closeModal();
+  commit(a.name+' now follows the '+ROLE_LABEL(a.role)+' group settings.',{title:'User access updated',audience:'admin'});
 }
 function resetAccess(role){
   store.hiddenPages[role] = [];
