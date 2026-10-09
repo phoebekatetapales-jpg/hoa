@@ -1274,6 +1274,7 @@ const ADMIN = {
   access(){
     const role = tabOf('access','homeowner');
     const off = (store.hiddenPages[role]||[]).length;
+    const people = store.accounts.filter(a => a.role === role).sort((a,b) => a.name.localeCompare(b.name));
     const rows = NAV[role].map(g =>
       '<p class="navlabel" style="margin:14px 0 2px">'+esc(g.g)+'</p>' +
       g.items.map(it => {
@@ -1284,8 +1285,15 @@ const ADMIN = {
           '<button class="tgl" role="switch" aria-checked="'+on+'" aria-label="'+esc(it.label)+'"'+
           (locked ? ' disabled style="opacity:.45;cursor:not-allowed"' : ' onclick="flipPage(\''+role+'\',\''+it.id+'\')"')+'><i></i></button></div>';
       }).join('')).join('');
-    return head('User Access','Choose which pages each type of user can see. Turned-off pages disappear from their menu straight away.') +
+    return head('User Access','Choose which pages each type of user can see. A switch applies to everyone listed under that tab.') +
       tabs('access', ACCESS_ROLES.map(r => ({ id:r, label:ROLE_LABEL(r), n:(store.hiddenPages[r]||[]).length ? (store.hiddenPages[r].length+' off') : '' })), 'homeowner') +
+      sectionCard(ROLE_LABEL(role)+' accounts · '+people.length, people.length ? '<ul class="list">' + people.map(a =>
+        '<li><div class="row" style="align-items:center"><div class="avatar">'+(a.avatar ? '<img src="'+a.avatar+'" alt="">' : esc(initials(a.name)))+'</div>' +
+        '<div class="grow"><div class="ttl">'+esc(a.name)+'</div>' +
+        '<div class="meta"><span class="mono">'+esc(a.unit)+'</span>·<span>'+esc(a.email)+'</span></div></div>' +
+        '<span class="tag '+statusTag(a.status)+'">'+esc(a.status)+'</span></div></li>').join('') + '</ul>'
+        : empty('No '+ROLE_LABEL(role).toLowerCase()+' accounts yet','Add one from Homeowners.')) +
+      '<div style="height:14px"></div>' +
       sectionCard(ROLE_LABEL(role)+' pages', '<div class="card-pad">'+rows+'</div>',
         off ? '<button class="btn btn-ghost btn-sm" onclick="resetAccess(\''+role+'\')">Turn all back on</button>' : '');
   },
