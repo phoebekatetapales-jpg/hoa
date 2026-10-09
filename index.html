@@ -425,7 +425,7 @@ html[data-theme="dark"] .bubble.mine{color:#0E121C}
         </button>
       </div>
     </div>
-    <p class="auth-foot">Prototype build · no real accounts are created and nothing leaves your browser.</p>
+    <p class="auth-foot">Accounts are created by the admin office. Your data is stored securely online.</p>
   </div>
   <div class="auth-panel">
     <div class="auth-card">
@@ -451,6 +451,7 @@ html[data-theme="dark"] .bubble.mine{color:#0E121C}
         </div>
       </label>
       <button class="btn btn-primary" id="signin">Sign in</button>
+      <button class="btn btn-ghost" id="magicLink" type="button" style="width:100%;margin-top:8px">First time, or forgot your password? Email me a sign-in link</button>
       <p class="hint" style="color:var(--rose);font-weight:600">No portal account uses that email? Ask the admin office to register you.</p>
       <p id="authErr" class="hint hide" style="color:var(--rose);font-weight:600"></p>
       <details class="matrix" id="roleMatrix">
@@ -514,6 +515,7 @@ html[data-theme="dark"] .bubble.mine{color:#0E121C}
 <div id="modalHost"></div>
 <div id="toasts" aria-live="polite"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ============================================================
    STORE — one source of truth for both portals
@@ -533,25 +535,25 @@ const store = {
   lastSync:{ msg:'Portal ready. Waiting for activity.', at:new Date() },
 
   accounts:[
-    { id:'u0', name:'Arnel Bautista', email:'abautista.k7q2@hoa-community.ph', password:'Hoa#Adm-7Kq2', role:'admin',
+    { id:'u0', name:'Arnel Bautista', email:'abautista.k7q2@hoa-community.ph', password:'', role:'admin',
       unit:'Admin office', title:'President / Portal administrator', phone:'0917 555 0100', status:'Active', added:'2024-01-15', lastSeen:new Date(Date.now()-36e5*3) },
-    { id:'u1', name:'Rina Dela Cruz', email:'rdelacruz.m4x9@hoa-community.ph', password:'Hoa#Own-4Mx9', role:'homeowner',
+    { id:'u1', name:'Rina Dela Cruz', email:'rdelacruz.m4x9@hoa-community.ph', password:'', role:'homeowner',
       unit:'B-12', title:'Owner of record', phone:'0917 555 0142', status:'Active', added:'2021-06-02', lastSeen:new Date(Date.now()-36e5*8) },
-    { id:'u2', name:'Marco Villanueva', email:'mvillanueva.p3t8@hoa-community.ph', password:'Hoa#Own-3Pt8', role:'homeowner',
+    { id:'u2', name:'Marco Villanueva', email:'mvillanueva.p3t8@hoa-community.ph', password:'', role:'homeowner',
       unit:'A-04', title:'Owner of record', phone:'0917 555 0121', status:'Active', added:'2019-03-11', lastSeen:new Date(Date.now()-864e5*2) },
-    { id:'u3', name:'Jonna Reyes', email:'jreyes.w6n1@hoa-community.ph', password:'Hoa#Own-6Wn1', role:'homeowner',
+    { id:'u3', name:'Jonna Reyes', email:'jreyes.w6n1@hoa-community.ph', password:'', role:'homeowner',
       unit:'C-21', title:'Owner of record', phone:'0917 555 0166', status:'Active', added:'2018-09-24', lastSeen:new Date(Date.now()-864e5*5) },
-    { id:'u4', name:'Ferdie Lim', email:'flim.z2r5@hoa-community.ph', password:'Hoa#Own-2Zr5', role:'homeowner',
+    { id:'u4', name:'Ferdie Lim', email:'flim.z2r5@hoa-community.ph', password:'', role:'homeowner',
       unit:'D-07', title:'Owner of record', phone:'0917 555 0188', status:'Active', added:'2016-02-08', lastSeen:new Date(Date.now()-864e5*1) },
     { id:'u5', name:'Estrella Ocampo', email:'eocampo.h8d3@hoa-community.ph', password:'', role:'homeowner',
       unit:'D-15', title:'Owner of record', phone:'0908 555 0133', status:'Invited', added:'2026-08-19', lastSeen:null },
-    { id:'u6', name:'Teresa Santos', email:'tsantos.v5j7@hoa-community.ph', password:'Hoa#Ren-5Vj7', role:'renter',
+    { id:'u6', name:'Teresa Santos', email:'tsantos.v5j7@hoa-community.ph', password:'', role:'renter',
       unit:'C-21', title:'Tenant of C-21', phone:'0917 555 0155', status:'Active', added:'2025-11-04', lastSeen:new Date(Date.now()-36e5*14) },
-    { id:'u7', name:'SG Onting', email:'sgonting.b9c4@hoa-community.ph', password:'Hoa#Sec-9Bc4', role:'security',
+    { id:'u7', name:'SG Onting', email:'sgonting.b9c4@hoa-community.ph', password:'', role:'security',
       unit:'Main gate', title:'Guard on post', phone:'0917 555 0110', status:'Active', added:'2025-02-17', lastSeen:new Date(Date.now()-36e5*1) },
-    { id:'u8', name:'Liza Manalo', email:'lmanalo.q1y6@hoa-community.ph', password:'Hoa#Brd-1Qy6', role:'board',
+    { id:'u8', name:'Liza Manalo', email:'lmanalo.q1y6@hoa-community.ph', password:'', role:'board',
       unit:'C-03', title:'Board of Trustees', phone:'0917 555 0177', status:'Active', added:'2024-09-13', lastSeen:new Date(Date.now()-864e5*1) },
-    { id:'u9', name:'Phoebe Kate Tapales', email:'phoebe.kate.tapales@multiplytalents.io', password:'Multiply talents', role:'admin',
+    { id:'u9', name:'Phoebe Kate Tapales', email:'phoebe.kate.tapales@multiplytalents.io', password:'', role:'admin',
       unit:'Admin office', title:'Portal administrator', phone:'', status:'Active', added:'2026-10-09', lastSeen:null }
   ],
   boardDocs:[
@@ -726,7 +728,7 @@ const store = {
       ]}
     ],
     votes:{ 'pres-a':147, 'pres-b':121, 'treas-a':160, 'treas-b':108 },
-    ballotsCast:268, myBallot:{}
+    ballotsCast:268, ballots:{}
   },
 
   /* support */
@@ -1015,15 +1017,21 @@ function authErr(msg){
 function findAccount(email){
   return store.accounts.find(a => a.email.toLowerCase() === String(email).trim().toLowerCase());
 }
-$('#signin').addEventListener('click', () => {
+$('#signin').addEventListener('click', async () => {
   if(!dataReady) return;
-  const email = $('#email').value.trim(), pass = $('#pass').value;
-  const acct = findAccount(email);
-  if(!acct){ authErr('No portal account uses that email. Ask the admin office to register you.'); return; }
-  if(acct.status === 'Suspended'){ authErr('This account is suspended. Contact the admin office.'); return; }
-  if(acct.status === 'Invited'){ authErr('This account has not been activated yet. Check the invitation email.'); return; }
-  if(pass !== acct.password){ authErr('That password does not match our records.'); return; }
-  authErr(''); enter(acct, 'password');
+  if(!sb){ authErr('Could not reach the portal server. Check your internet connection and reload the page.'); return; }
+  const email = $('#email').value.trim().toLowerCase(), pass = $('#pass').value;
+  if(!email || !pass){ authErr('Enter your email and password.'); return; }
+  const btn = $('#signin'); btn.disabled = true; btn.textContent = 'Signing in…';
+  const { error } = await sb.auth.signInWithPassword({ email, password:pass });
+  btn.disabled = false; btn.textContent = 'Sign in';
+  if(error){
+    authErr(/confirm/i.test(error.message)
+      ? 'Open your invitation email first — the link in it activates your account.'
+      : 'That email and password do not match. First time here, or forgot your password? Use "Email me a sign-in link".');
+    return;
+  }
+  afterLogin();
 });
 
 function enter(acct, method){
@@ -1040,6 +1048,8 @@ function enter(acct, method){
     method==='password' ? 'Welcome back, '+acct.name.split(' ')[0]+'.' : 'Linked through '+method+'.');
 }
 function signOut(){
+  if(sb) sb.auth.signOut();
+  cloudOn = false; stopLive();
   store.session.authed=false; store.tab={};
   $('#app').classList.add('hide'); $('#auth').classList.remove('hide');
   $('#pass').value=''; authErr(''); closeDrawer(); closeNotifs();
@@ -1239,7 +1249,8 @@ const augDues = () => store.dues.filter(d=>d.period==='August 2026');
 const collected = () => augDues().filter(d=>d.status==='Paid').reduce((a,b)=>a+b.amount,0);
 const collectionPct = () => Math.round(augDues().filter(d=>d.status==='Paid').length / augDues().length * 100);
 const totalExpense = () => store.expenses.filter(x=>x.status==='Paid').reduce((a,b)=>a+b.amount,0);
-const hasVoted = () => Object.keys(store.election.myBallot).length === store.election.positions.length;
+function myBallot(){ const e = store.election, id = store.session.accountId; e.ballots = e.ballots || {}; return e.ballots[id] || (e.ballots[id] = {}); }
+const hasVoted = () => Object.keys(myBallot()).length === store.election.positions.length;
 const phaseCollections = () => {
   const phases = [...new Set(store.units.map(u=>u.phase))].sort();
   return phases.map(ph => {
@@ -2221,7 +2232,8 @@ function accountSettings(){
         '<input type="file" id="avatarFile" accept="image/*" class="hide" onchange="handleAvatarFile(event)">' +
       '</div>' +
       '<label class="fld"><span>Full name</span><input class="input" id="pf_name" value="'+esc(s.name)+'"></label>' +
-      '<label class="fld"><span>Email</span><input class="input" id="pf_email" value="'+esc(s.email)+'"></label>' +
+      '<label class="fld"><span>Email</span><input class="input" id="pf_email" value="'+esc(s.email)+'" disabled></label>' +
+      '<p class="meta" style="margin:-6px 0 12px">Your sign-in email is changed by the admin office.</p>' +
       '<label class="fld"><span>Mobile number</span><input class="input" id="pf_phone" value="'+esc(s.phone||'')+'"></label>' +
       '<label class="fld"><span>Unit</span><input class="input" value="'+esc(s.unit)+'" disabled></label>' +
       '<p class="meta" style="margin:-6px 0 12px">Unit assignment is changed by the admin office.</p>' +
@@ -2432,7 +2444,7 @@ const HOME = {
     e.positions.map(p =>
       '<div class="card" style="margin-bottom:14px"><div class="card-head"><h3>'+esc(p.label)+'</h3></div><div class="card-pad">' +
       p.candidates.map(c => {
-        const chosen = e.myBallot[p.id]===c.id;
+        const chosen = myBallot()[p.id]===c.id;
         return '<button class="ballot'+(chosen?' chosen':'')+'" onclick="pick(\''+p.id+'\',\''+c.id+'\')">' +
           '<span class="ph">'+(c.photo?'<img src="'+c.photo+'" alt="">':esc(initials(c.name)))+'</span><span style="flex:1">' +
           '<span class="ttl" style="display:block">'+esc(c.name)+(chosen?' <span class="tag t-emerald">Selected</span>':'')+'</span>' +
@@ -3144,15 +3156,13 @@ function userForm(id, presetRole){
           '<div class="mk" style="font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);margin-top:9px">Kept from them</div>' +
           '<div class="mv" id="rp_deny" style="font-size:13px;color:var(--rose);margin-top:3px"></div></div>') +
     '<label class="fld"><span>Full name</span><input class="input" id="f_n" value="'+esc(a?a.name:'')+'" placeholder="Estrella Ocampo"></label>' +
-    '<label class="fld"><span>Email for sign-in</span><input class="input" id="f_e" type="email" value="'+esc(a?a.email:'')+'" placeholder="name@hoa-community.ph"></label>' +
+    '<label class="fld"><span>Email for sign-in</span><input class="input" id="f_e" type="email" value="'+esc(a?a.email:'')+'"'+(a?' disabled':'')+' placeholder="name@hoa-community.ph"></label>' +
     '<div class="grid g-2" style="gap:0 12px">' +
       '<label class="fld"><span>Unit or post</span><input class="input" id="f_u" value="'+esc(a?a.unit:'')+'" placeholder="D-15 or Main gate"></label>' +
       '<label class="fld"><span>Mobile number</span><input class="input" id="f_p" value="'+esc(a?a.phone:'')+'" placeholder="0917 555 0000"></label></div>' +
     '<label class="fld"><span>Title</span><input class="input" id="f_t" value="'+esc(a?a.title:'Owner of record')+'"></label>' +
     (a ? '' :
-      '<label class="fld"><span>Access</span><select class="input" id="f_s">' +
-        '<option value="Invited">Send an invitation email</option>' +
-        '<option value="Active">Activate now with a temporary password</option></select></label>' +
+      '<p class="meta" style="display:block;margin:0 0 14px">An invitation email goes to them as soon as you add the account. They open the link, choose a password, and they are in.</p>' +
       '<div class="switch" style="border-top:1px solid var(--line);padding-top:14px">' +
         '<div><div class="sl">Also add to the unit registry</div>' +
         '<div class="sd">Owners only — creates the property record and the current dues line.</div></div>' +
@@ -3175,7 +3185,7 @@ function userForm(id, presetRole){
         return true;
       }
 
-      const status = $('#f_s').value;
+      const status = 'Invited';
       const temp = status==='Active' ? 'temp'+Math.floor(1000+Math.random()*8999) : '';
       store.accounts.push({ id:uid(), name, email, password:temp, role:chosen, unit:unit||'Admin office',
         title:$('#f_t').value.trim()||ROLE_LABEL(chosen), phone:$('#f_p').value.trim(),
@@ -3194,6 +3204,7 @@ function userForm(id, presetRole){
         ? ROLE_LABEL(chosen)+' account added for '+name+'. Temporary password: '+temp
         : 'Invitation sent to '+email+' as '+ROLE_LABEL(chosen)+'.',
         {title:'Account added'});
+      sendInvite(email, name);
       return true;
     });
   rolePreview(role);
@@ -3212,21 +3223,24 @@ function setUserStatus(id, status){
 }
 function activateUser(id){
   const a = store.accounts.find(x=>x.id===id);
-  a.status='Active'; a.password='temp'+Math.floor(1000+Math.random()*8999);
-  commit(a.name+' activated. Temporary password: '+a.password,{title:'Account activated'});
+  a.status='Active';
+  commit(a.name+' activated. A sign-in link is on its way to '+a.email+'.',{title:'Account activated'});
+  sendInvite(a.email, a.name);
 }
 function resendInvite(id){
   const a = store.accounts.find(x=>x.id===id);
-  commit('Invitation resent to '+a.email+'.',{title:'Invitation sent'});
+  sendInvite(a.email, a.name);
 }
 function resetPassword(id){
   const a = store.accounts.find(x=>x.id===id);
-  modal('Reset password for '+a.name,'They will be asked to set a new one at next sign-in.',
+  modal('Reset password for '+a.name,'They get an email with a link to choose a new password.',
     '<div class="card card-pad" style="background:var(--paper)"><div class="kv"><span>Unit</span><b>'+esc(a.unit)+'</b></div>' +
     '<div class="kv"><span>Email</span><b>'+esc(a.email)+'</b></div></div>',
-    'Reset password', () => {
-      a.password = 'temp'+Math.floor(1000+Math.random()*8999);
-      commit('Password reset for '+a.name+'. Temporary password: '+a.password,{title:'Password reset'});
+    'Send reset email', () => {
+      if(!sbMail){ toast('info','Not connected','Could not reach the portal server.'); return false; }
+      sbMail.auth.resetPasswordForEmail(a.email, { redirectTo:SITE_URL }).then(({ error }) => error
+        ? toast('info','Reset email not sent', mailError(error))
+        : toast('ok','Reset email sent', a.name+' will get a link at '+a.email+' to choose a new password.'));
       return true; });
 }
 function homeownerProfile(unit){
@@ -3393,30 +3407,30 @@ function deleteRule(id){ const r=store.rules.find(x=>x.id===id); store.rules=sto
   commit('House rule removed — '+r.title+'.',{title:'Rule removed'}); }
 
 /* elections */
-function pick(posId,candId){ store.election.myBallot[posId]=candId; render(); }
+function pick(posId,candId){ myBallot()[posId]=candId; render(); }
 function submitBallot(){
   const e = store.election;
-  if(Object.keys(e.myBallot).length < e.positions.length){
+  if(Object.keys(myBallot()).length < e.positions.length){
     toast('info','Ballot incomplete','Choose one candidate for every position.'); return;
   }
-  if(!e.myBallot._submitted){ e.ballotsCast++; }
-  const prev = e.myBallot._recorded || {};
+  if(!myBallot()._submitted){ e.ballotsCast++; }
+  const prev = myBallot()._recorded || {};
   e.positions.forEach(p => {
-    const now = e.myBallot[p.id];
+    const now = myBallot()[p.id];
     if(prev[p.id] && prev[p.id]!==now) e.votes[prev[p.id]] = Math.max(0,(e.votes[prev[p.id]]||0)-1);
     if(prev[p.id]!==now) e.votes[now] = (e.votes[now]||0)+1;
   });
-  e.myBallot._recorded = Object.assign({}, ...e.positions.map(p=>({[p.id]:e.myBallot[p.id]})));
-  const first = e.myBallot._submitted;
-  e.myBallot._submitted = true;
+  myBallot()._recorded = Object.assign({}, ...e.positions.map(p=>({[p.id]:myBallot()[p.id]})));
+  const first = myBallot()._submitted;
+  myBallot()._submitted = true;
   commit((first?'Ballot updated':'Ballot recorded')+' for unit '+myUnit()+'. Turnout now '+e.ballotsCast+' of '+e.eligible+'.',{title:first?'Ballot updated':'Ballot submitted'});
 }
 function withdrawBallot(){
   const e = store.election;
-  const rec = e.myBallot._recorded || {};
+  const rec = myBallot()._recorded || {};
   Object.values(rec).forEach(c => e.votes[c] = Math.max(0,(e.votes[c]||0)-1));
   e.ballotsCast = Math.max(0, e.ballotsCast-1);
-  e.myBallot = {};
+  delete e.ballots[store.session.accountId];
   commit('Ballot withdrawn for unit '+myUnit()+'.',{title:'Ballot withdrawn'});
 }
 function closeElection(){ store.election.status='Closed'; commit('Ballot closed — '+store.election.ballotsCast+' votes counted.',{title:'Election closed'}); }
@@ -3684,18 +3698,20 @@ function removeItem(listKey, value){
   store.settings[listKey] = store.settings[listKey].filter(x=>x!==value);
   commit('“'+value+'” removed from the list.',{title:'List updated'});
 }
-function passwordForm(){
-  modal('Change password','You stay signed in on this device.',
-    '<label class="fld"><span>Current password</span><input class="input" type="password" id="f_a"></label>' +
-    '<label class="fld"><span>New password</span><input class="input" type="password" id="f_b"></label>' +
-    '<label class="fld"><span>Confirm new password</span><input class="input" type="password" id="f_c"></label>',
-    'Change password', () => {
+function passwordForm(){ setPasswordForm(false); }
+function setPasswordForm(first){
+  modal(first ? 'Welcome — choose your password' : 'Change password',
+    first ? 'Use it with your email to sign in from any device.' : 'You stay signed in on this device.',
+    '<label class="fld"><span>New password</span><input class="input" type="password" id="f_b" autocomplete="new-password"></label>' +
+    '<label class="fld"><span>Confirm new password</span><input class="input" type="password" id="f_c" autocomplete="new-password"></label>',
+    'Save password', () => {
       const b=$('#f_b').value, c=$('#f_c').value;
       if(b.length<8){ toast('info','Too short','Use at least eight characters.'); return false; }
       if(b!==c){ toast('info','Passwords differ','The confirmation does not match.'); return false; }
-      const acct = store.accounts.find(x=>x.id===store.session.accountId);
-      if(acct) acct.password = b;
-      toast('ok','Password changed','Use the new password next time you sign in.'); return true; });
+      sb.auth.updateUser({ password:b }).then(({ error }) => error
+        ? toast('info','Password not saved', error.message)
+        : toast('ok','Password saved','Use it with your email next time you sign in.'));
+      return true; });
 }
 
 /* ============================================================
@@ -3759,28 +3775,237 @@ function saveNow(){
   clearTimeout(saveTimer); saveTimer = null;
   if(!db || !dataReady) return;
   const snap = { __seedIds: SEED_IDS, __savedAt: new Date() };
-  Object.keys(SEED).forEach(k => { snap[k] = store[k]; });
+  Object.keys(SEED).forEach(k => { snap[k] = enc(store[k]); });
   try{
     const tx = db.transaction(DB_STORE, 'readwrite');
     tx.objectStore(DB_STORE).put(snap, DB_KEY);
     tx.onerror = () => toast('info','Could not save','Your latest change was not saved on this device: '+(tx.error && tx.error.message));
   }catch(e){ toast('info','Could not save','Your latest change was not saved on this device: '+e.message); }
 }
-function saveSoon(){ if(!saveTimer) saveTimer = setTimeout(saveNow, 250); }
+function saveSoon(){ if(!saveTimer) saveTimer = setTimeout(saveNow, 250); pushSoon(); }
 window.addEventListener('pagehide', saveNow);
 document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') saveNow(); });
 
 function loadSaved(){
-  const done = () => { dataReady = true; $('#signin').disabled = false; applyTheme(); };
+  const done = () => { dataReady = true; applyTheme(); startCloud(); };
   $('#signin').disabled = true;
   if(!window.indexedDB){ done(); return; }
   openDb().then(d => {
     db = d;
     const req = db.transaction(DB_STORE, 'readonly').objectStore(DB_STORE).get(DB_KEY);
-    req.onsuccess = () => { if(req.result) mergeSaved(req.result); done(); };
+    req.onsuccess = () => { if(req.result) mergeSaved(dec(req.result)); done(); };
     req.onerror = done;
   }).catch(done);
 }
+/* ============================================================
+   ONLINE DATA — Supabase holds the accounts and the shared portal
+   data, so every device sees the same thing and updates arrive live.
+============================================================ */
+const SUPABASE_URL = 'https://fzrzoktbjfxvlvxerywz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_K0VbmnQHAlkcXHKmdqRIAQ_mzJ9yCCb'; /* publishable key — meant to sit in page code */
+const SITE_URL = 'https://hoa-two-zeta.vercel.app';
+const LINK_HASH = location.hash;                                   /* read before Supabase clears it */
+const sbLib = window.supabase;
+const sb = sbLib ? sbLib.createClient(SUPABASE_URL, SUPABASE_KEY,
+  { auth:{ flowType:'implicit', persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }) : null;
+/* a second, sessionless client only for sending invitation/reset emails, so it never touches the admin's own sign-in */
+const sbMail = sbLib ? sbLib.createClient(SUPABASE_URL, SUPABASE_KEY,
+  { auth:{ flowType:'implicit', persistSession:false, autoRefreshToken:false, detectSessionInUrl:false, storageKey:'hoa-mailer' } }) : null;
+
+const LOCAL_ONLY = ['theme','prefs','linked','seen'];               /* personal to this device */
+const ADMIN_ONLY = ['settings','hiddenPages','userAccess'];         /* only admins may change these */
+const SHARED_KEYS = Object.keys(SEED).filter(k => k !== 'accounts' && !LOCAL_ONLY.includes(k));
+let cloudOn = false, synced = {}, syncedAccts = {}, live = null, pushTimer = null, heartbeat = null,
+    membersTimer = null, renderPending = false, lastFailToast = 0;
+
+/* Dates, Sets and named functions survive the trip through JSON */
+function enc(v){
+  if(v instanceof Date) return isNaN(v) ? null : { $d:v.toISOString() };
+  if(v instanceof Set) return { $s:[...v].map(enc) };
+  if(typeof v === 'function') return v.name && window[v.name] === v ? { $f:v.name } : null;
+  if(Array.isArray(v)) return v.map(enc);
+  if(v && typeof v === 'object'){ const o = {}; for(const k in v) if(v[k] !== undefined) o[k] = enc(v[k]); return o; }
+  return v;
+}
+function dec(v){
+  if(Array.isArray(v)) return v.map(dec);
+  if(v && typeof v === 'object' && !(v instanceof Date) && !(v instanceof Set)){
+    const ks = Object.keys(v);
+    if(ks.length === 1 && ks[0] === '$d') return new Date(v.$d);
+    if(ks.length === 1 && ks[0] === '$s') return new Set(v.$s.map(dec));
+    if(ks.length === 1 && ks[0] === '$f') return typeof window[v.$f] === 'function' ? window[v.$f] : null;
+    const o = {}; for(const k in v) o[k] = dec(v[k]); return o;
+  }
+  return v;
+}
+/* key-sorted JSON, so our copy and the database's copy compare equal */
+const canon = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x)
+  ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
+const sig = k => canon(enc(store[k]));
+const acctRow = a => ({ id:a.id, email:String(a.email).toLowerCase(), name:a.name, role:a.role, unit:a.unit||'',
+  title:a.title||'', phone:a.phone||'', status:a.status||'Invited', added:a.added||new Date().toISOString().slice(0,10), avatar:a.avatar||null });
+const rowAcct = r => ({ id:r.id, email:r.email, name:r.name, role:r.role, unit:r.unit, title:r.title, phone:r.phone,
+  status:r.status, added:r.added, avatar:r.avatar||null, password:'', lastSeen:r.last_seen ? new Date(r.last_seen) : null });
+
+function syncFail(error){
+  if(Date.now() - lastFailToast < 30000) return;
+  lastFailToast = Date.now();
+  toast('info','Not saved online', 'Your latest change could not be saved: '+(error && error.message || error)+'. Check your connection.');
+}
+function mailError(error){
+  const m = error && error.message || String(error);
+  if(/rate|seconds|too many/i.test(m)) return 'Too many emails just now. Wait a minute, then try again.';
+  if(/not authorized|smtp|sending/i.test(m)) return 'The portal email account is not set up yet (Supabase → Authentication → Emails → SMTP).';
+  return m;
+}
+async function sendInvite(email, name){
+  if(!sbMail){ toast('info','Invitation not sent','Could not reach the portal server.'); return; }
+  const { error } = await sbMail.auth.signInWithOtp({ email, options:{ shouldCreateUser:true, emailRedirectTo:SITE_URL } });
+  if(error) toast('info','Invitation email not sent', mailError(error));
+  else toast('ok','Invitation emailed', (name||email)+' will get a link at '+email+' to set a password and sign in.');
+}
+
+function applyMembers(rows){
+  const keep = new Map(store.accounts.map(a => [a.id, a]));
+  store.accounts = rows.map(r => Object.assign(rowAcct(r), { availability:(keep.get(r.id)||{}).availability }));
+  syncedAccts = {};
+  store.accounts.forEach(a => { syncedAccts[a.id] = canon(acctRow(a)); });
+}
+function applyRow(row){
+  if(!SHARED_KEYS.includes(row.key)) return false;
+  const v = dec(row.value), seed = SEED[row.key];
+  store[row.key] = isPlain(seed) && isPlain(v) ? Object.assign(structuredClone(seed), v) : v;
+  synced[row.key] = sig(row.key);
+  return true;
+}
+async function loadCloud(){
+  const [m, d] = await Promise.all([ sb.from('members').select('*').order('added'), sb.from('portal_data').select('key,value') ]);
+  if(m.error) throw m.error;
+  if(d.error) throw d.error;
+  applyMembers(m.data);
+  synced = {};
+  d.data.forEach(applyRow);
+}
+
+function pushSoon(){ if(cloudOn && !pushTimer) pushTimer = setTimeout(pushNow, 400); }
+async function pushNow(){
+  clearTimeout(pushTimer); pushTimer = null;
+  if(!cloudOn) return;
+  const admin = isAdmin(), me = store.session.accountId;
+  const rows = [];
+  SHARED_KEYS.forEach(k => {
+    if(!admin && ADMIN_ONLY.includes(k)) return;
+    const s = sig(k);
+    if(s === synced[k]) return;
+    rows.push({ key:k, value:JSON.parse(s), updated_at:new Date().toISOString(), updated_by:store.session.email });
+    synced[k] = s;
+  });
+  if(rows.length){
+    const { error } = await sb.from('portal_data').upsert(rows);
+    if(error){ rows.forEach(r => { delete synced[r.key]; }); syncFail(error); }
+  }
+  const now = {};
+  store.accounts.forEach(a => { now[a.id] = canon(acctRow(a)); });
+  for(const id in now){
+    if(now[id] === syncedAccts[id]) continue;
+    const row = JSON.parse(now[id]);
+    let res;
+    if(admin) res = await sb.from('members').upsert(row);
+    else if(id === me) res = await sb.from('members').update({ name:row.name, phone:row.phone, avatar:row.avatar }).eq('id', id);
+    else continue;
+    if(res.error) syncFail(res.error); else syncedAccts[id] = now[id];
+  }
+  if(admin) for(const id of Object.keys(syncedAccts)) if(!(id in now)){
+    const { error } = await sb.from('members').delete().eq('id', id);
+    if(error) syncFail(error); else delete syncedAccts[id];
+  }
+}
+
+/* live updates from everyone else */
+function liveRender(){
+  const f = document.activeElement;
+  const typing = f && f.closest && f.closest('#main') && /^(INPUT|TEXTAREA|SELECT)$/.test(f.tagName);
+  if(!store.session.authed) return;
+  if(modalOpen || typing){ renderPending = true; return; }
+  renderPending = false; render();
+}
+document.addEventListener('focusout', () => setTimeout(() => { if(renderPending) liveRender(); }, 0));
+async function reloadMembers(){
+  membersTimer = null;
+  if(!cloudOn) return;
+  const { data, error } = await sb.from('members').select('*').order('added');
+  if(error) return;
+  const mine = data.find(r => r.id === store.session.accountId);
+  if(!mine || mine.status === 'Suspended'){
+    signOut(); authErr('Your portal access has been turned off. Contact the admin office.'); return;
+  }
+  applyMembers(data);
+  liveRender();
+}
+function startLive(){
+  stopLive();
+  live = sb.channel('hoa-live')
+    .on('postgres_changes', { event:'*', schema:'public', table:'portal_data' }, p => {
+      const row = p.new;
+      if(!row || !row.key || !SHARED_KEYS.includes(row.key)) return;
+      if(canon(row.value) === synced[row.key]) return;            /* our own change coming back */
+      if(applyRow(row)) liveRender();
+    })
+    .on('postgres_changes', { event:'*', schema:'public', table:'members' }, () => {
+      if(!membersTimer) membersTimer = setTimeout(reloadMembers, 600);
+    })
+    .subscribe();
+  clearInterval(heartbeat);
+  heartbeat = setInterval(() => {
+    if(cloudOn) sb.from('members').update({ last_seen:new Date().toISOString() }).eq('id', store.session.accountId).then(() => {});
+  }, 120000);
+}
+function stopLive(){
+  clearInterval(heartbeat); heartbeat = null;
+  if(live && sb){ sb.removeChannel(live); live = null; }
+}
+
+async function afterLogin(){
+  authErr('');
+  const { data:m, error } = await sb.rpc('claim_membership');
+  if(error || !m || !m.id){
+    await sb.auth.signOut();
+    authErr(error ? 'Could not sign in: '+error.message : 'No portal account uses that email, or it has been suspended. Ask the admin office.');
+    return false;
+  }
+  try{ await loadCloud(); }
+  catch(e){ await sb.auth.signOut(); authErr('Signed in, but the portal data could not load: '+(e.message||e)+'. Try again.'); return false; }
+  const acct = store.accounts.find(a => a.id === m.id) || rowAcct(m);
+  cloudOn = true;
+  enter(acct, 'password');
+  startLive();
+  pushNow();                                                      /* the very first sign-in uploads the starting data */
+  return true;
+}
+async function startCloud(){
+  const btn = $('#signin');
+  if(!sb){ btn.disabled = false; authErr('Could not reach the portal server. Check your internet connection and reload the page.'); return; }
+  const bad = /error_description=([^&]+)/.exec(LINK_HASH);
+  if(bad){
+    const msg = decodeURIComponent(bad[1].replace(/\+/g,' '));
+    authErr(/expired|invalid/i.test(msg) ? 'That link has expired or was already used. Type your email and use "Email me a sign-in link" for a fresh one.' : msg);
+  }
+  const { data } = await sb.auth.getSession();
+  btn.disabled = false;
+  if(data && data.session && await afterLogin() && /access_token=/.test(LINK_HASH)) setPasswordForm(true);
+}
+$('#magicLink').addEventListener('click', async () => {
+  if(!sb){ authErr('Could not reach the portal server. Check your internet connection and reload the page.'); return; }
+  const email = $('#email').value.trim().toLowerCase();
+  if(!email.includes('@')){ authErr('Type your email above first, then tap "Email me a sign-in link" again.'); return; }
+  const b = $('#magicLink'); b.disabled = true;
+  const { error } = await sb.auth.signInWithOtp({ email, options:{ shouldCreateUser:true, emailRedirectTo:SITE_URL } });
+  b.disabled = false;
+  if(error){ authErr('Could not send the link: '+mailError(error)); return; }
+  authErr('');
+  toast('ok','Check your email','If '+email+' has a portal account, a sign-in link is on its way. It works once and expires in an hour.');
+});
+
 loadSaved();
 
 applyTheme();
